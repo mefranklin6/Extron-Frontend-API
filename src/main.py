@@ -47,15 +47,13 @@ LABELS_MAP = make_str_obj_map(all_labels)
 POPUPS = all_popups + all_modals
 
 GUI_DOMAINS_MAP = {
-    # Dictionaries
     "touch_panel": TOUCH_PANELS_MAP,
+    "popup": TOUCH_PANELS_MAP,  # Object for popups is touch panel
     "button": BUTTONS_MAP,
     "knob": KNOBS_MAP,
     "label": LABELS_MAP,
     "level": LEVELS_MAP,
     "slider": SLIDERS_MAP,
-    # List
-    "popup": POPUPS,
 }
 
 
@@ -180,6 +178,10 @@ def get_object(string_key, object_map):
         log("{} not in {}".format(string_key, object_map), "error")
         log("Valid options for map are: {}".format(object_map.keys()), "info")
         return None
+    except Exception as e:
+        log(str(e), "error")
+        log("Valid options for map are: {}".format(object_map.keys()), "info")
+        return None
 
 
 def handle_gui_change(data):
@@ -201,8 +203,9 @@ def handle_gui_change(data):
         func(obj, *args)
         return "OK"
     except Exception as e:
-        log(str(e), "error")
-        return str(e)
+        error = "GUI change: {} | with data {}".format(str(e), str(data))
+        log(str(error), "error")
+        return str(error)
 
 
 def process_received_data(json_data, client):
@@ -241,7 +244,7 @@ def process_received_data(json_data, client):
     except Exception as e:
         log(str(e), "error")
         if client:
-            client.Send(b"Error processing data\n")
+            client.Send(b"Error processing data : {}".format(str(e)))
 
 
 def send_user_interaction(gui_element_data):
