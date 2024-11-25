@@ -1,0 +1,60 @@
+{
+    "schemaVersion": "1.0.0",
+    "system": {
+        "name": "Extron-Frontend-API",
+        "code_folder_path": "src",
+        "code_entry_file": "main.py",
+        "layout_folder_path": "layout",
+        "rfile_folder_path": "rfile",
+        "irfile_folder_path": "ir",
+        "sound_folder_path": "sound",
+        "system_id": "4836",
+        "author": {
+            "name": ""
+        },
+        "version": "1.0.706",
+        "primary_device_alias": "Processor_1"
+    },
+    "devices": [
+        {
+            "name": "Room Name - Controller",
+            "part_number": "60-1434-01",
+            "alias": "Processor_1",
+            "network": {
+                "interfaces": [
+                    {
+                        "address": "192.168.253.254",
+                        "type": "LAN"
+                    },
+                    {
+                        "address": "192.168.254.1",
+                        "type": "AVLAN"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Room Name - TLP",
+            "part_number": "60-1562-02",
+            "alias": "TouchPanel_1",
+            "network": {
+                "host_network_type": "LAN",
+                "interfaces": [
+                    {
+                        "address": "192.168.253.251",
+                        "type": "LAN"
+                    }
+                ]
+            },
+            "ui": {
+                "layout_file": "Test_Page.gdl",
+                "enable_click_sound": true,
+                "click_sound_file": "Touch.wav",
+                "press_feedback": "none",
+                "thumb_change_report_interval": 0.1,
+                "thumb_to_fill_sync_time": 0.1
+            },
+            "extron_control_web_id": "ui"
+        }
+    ]
+}

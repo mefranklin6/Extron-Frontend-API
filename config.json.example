@@ -1,0 +1,8 @@
+{
+    "backend_server_ip": "http://192.168.1.1/",
+    "backend_server_timeout": 5,
+    "ntp_primary": "ntp1.yourorg.edu",
+    "ntp_secondary": "pool.ntp.org",
+    "rpc_server_port": 8080,
+    "rpc_server_interface": "LAN"
+}
