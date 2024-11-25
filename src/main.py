@@ -59,8 +59,6 @@ GUI_DOMAINS_MAP = {
 }
 
 
-
-
 def string_to_bool(string):
     """Interperts RPC string values received as boolean"""
     if string.lower() in ["true", "1", "t", "y", "yes"]:
@@ -74,7 +72,8 @@ def string_to_bool(string):
 
 #### Externally callable functions ####
 
-## Standard Extron ui Package Functions ##
+
+## Standard Extron UI Package Functions ##
 def set_state(obj, state):
     obj.SetState(int(state))
 
@@ -112,7 +111,9 @@ def set_level(obj, level):
 def set_range(obj, min, max, step=1):
     obj.SetRange(int(min), int(max), int(step))
 
+
 #### Macro Functions ####
+
 
 def get_all_elements():
     """Called through RPC by sending {"type": "get_all_elements"}"""
@@ -128,6 +129,7 @@ def get_all_elements():
         "all_popups": all_popups,
     }
     return data
+
 
 # TODO: Get State Functions
 
@@ -278,13 +280,14 @@ def send_user_interaction(gui_element_data):
 # TODO: IP allow list filteirng
 
 rpc_serv = EthernetServerInterfaceEx(
-    IPPort=int(config.rpc_server_port), 
-    Protocol="TCP", 
+    IPPort=int(config.rpc_server_port),
+    Protocol="TCP",
     Interface=config.rpt_server_interface,
 )
 
 if rpc_serv.StartListen() != "Listening":
     raise ResourceWarning("Port unavailable")  # this is not likely to recover
+
 
 @event(rpc_serv, "ReceiveData")
 def handle_unsolicited_rpc_rx(client, data):
@@ -312,7 +315,7 @@ def handle_rpc_client_connect(client, state):
     # client.Send(b"Connected\n")
     # Log the state to see if any data is sent on connection
     log("Connection state: {}".format(state), "info")
-    #TODO: Debug mode
+    # TODO: Debug mode
 
 
 @event(rpc_serv, "Disconnected")
