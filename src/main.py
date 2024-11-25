@@ -55,7 +55,7 @@ GUI_DOMAINS_MAP = {
     "level": LEVELS_MAP,
     "slider": SLIDERS_MAP,
     # List
-    "popups": POPUPS,
+    "popup": POPUPS,
 }
 
 
@@ -73,7 +73,7 @@ def string_to_bool(string):
 #### Externally callable functions ####
 
 
-## Standard Extron UI Package Functions ##
+## Standard Extron ui Package Functions ##
 def set_state(obj, state):
     obj.SetState(int(state))
 
@@ -92,7 +92,9 @@ def set_visible(obj, visible):
 
 
 def set_blinking(obj, rate, state_list):
-    obj.SetBlinking(int(rate), state_list)
+    state_list = state_list.replace("[", "").replace("]", "").split(",")
+    state_list = [int(state) for state in state_list]
+    obj.SetBlinking(rate, state_list)
 
 
 def set_enabled(obj, enabled):
@@ -132,6 +134,7 @@ def get_all_elements():
 
 
 # TODO: Get State Functions
+# TODO: Timer / Level functions
 
 FUNCTIONS_MAP = {
     "SetState": set_state,
@@ -242,37 +245,34 @@ def process_received_data(json_data, client):
 
 
 def send_user_interaction(gui_element_data):
-    def _send_user_intraction_inner(gui_element_data):
-        data = {
-            "type": gui_element_data[0],
-            "name": gui_element_data[1],
-            "action": gui_element_data[2],
-            "value": gui_element_data[3],
-        }
+    domain = gui_element_data[0]
+    data = {
+        "name": gui_element_data[1],
+        "action": gui_element_data[2],
+        "value": gui_element_data[3],
+    }
 
-        data = json.dumps(data).encode()
+    data = json.dumps(data).encode()
 
-        log("Sending data: {}".format(str(data)), "info")
+    log("Sending data: {}".format(str(data)), "info")
 
-        headers = {"Content-Type": "application/json"}
-        req = urllib.request.Request(
-            config.backend_server_ip, data=data, headers=headers
-        )
-        try:
-            with urllib.request.urlopen(
-                req, timeout=config.backend_server_timeout
-            ) as response:
-                response_data = response.read().decode()
-                log(str(response_data), "info")
-                process_received_data(response_data, None)
+    headers = {"Content-Type": "application/json"}
+    url = "{}/api/v1/{}".format(config["backend_server_ip"], domain)
+    log("URL: {}".format(url), "info")
 
-        except Exception as e:
-            log(str(e), "error")
-            print(e)
+    req = urllib.request.Request(url, data=data, headers=headers, method="PUT")
 
-    @Wait(0)  # wait decorator hack
-    def _button_send_coroutine():
-        _send_user_intraction_inner(gui_element_data)
+    try:
+        with urllib.request.urlopen(
+            req, timeout=int(config["backend_server_timeout"])
+        ) as response:
+            response_data = response.read().decode()
+            log(str(response_data), "info")
+            process_received_data(response_data, None)
+
+    except Exception as e:
+        log(str(e), "error")
+        print(e)
 
 
 #### RPC Server ####
@@ -280,9 +280,9 @@ def send_user_interaction(gui_element_data):
 # TODO: IP allow list filteirng
 
 rpc_serv = EthernetServerInterfaceEx(
-    IPPort=int(config.rpc_server_port),
+    IPPort=int(config["rpc_server_port"]),
     Protocol="TCP",
-    Interface=config.rpt_server_interface,
+    Interface=config["rpc_server_interface"],
 )
 
 if rpc_serv.StartListen() != "Listening":
@@ -324,7 +324,7 @@ def handle_rpc_client_disconnect(client, state):
 
 
 def Initialize():
-    set_ntp(config.ntp_primary, config.ntp_secondary)
+    # set_ntp(config["ntp_primary"], config["ntp_secondary"])
     log("Initialized", "info")
 
 
