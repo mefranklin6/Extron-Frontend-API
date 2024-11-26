@@ -47,7 +47,8 @@ LABELS_MAP = make_str_obj_map(all_labels)
 # so a simple list is sufficient
 POPUPS = all_popups + all_modals
 
-GUI_DOMAINS_MAP = {
+DOMAINS_MAP = {
+    "processor": PROCESSORS_MAP,
     "touch_panel": TOUCH_PANELS_MAP,
     "button": BUTTONS_MAP,
     "knob": KNOBS_MAP,
@@ -123,6 +124,18 @@ def set_range(obj, min, max, step=1):
     obj.SetRange(int(min), int(max), int(step))
 
 
+def get_property(obj, property):
+    try:
+        attribute = getattr(obj, property)
+        return attribute
+    except AttributeError as e:
+        log(str(e), "error")
+        return e
+    except Exception as e:
+        log(str(e), "error")
+        return e
+
+
 # TODO: The rest of the extronlib ui functions, or at least the most common ones
 
 #### Macro Functions ####
@@ -144,7 +157,6 @@ def get_all_elements():
     return data
 
 
-# TODO: Get State Functions
 # TODO: Timer / Level functions
 
 FUNCTIONS_MAP = {
@@ -159,6 +171,7 @@ FUNCTIONS_MAP = {
     "ShowPage": show_page,
     "SetLevel": set_level,
     "SetRange": set_range,
+    "GetProperty": get_property,
 }
 
 #### User interaction events ####
@@ -177,6 +190,7 @@ def any_slider_released(slider, action, value):
 
 
 # TODO: Knob events
+# TODO: Property Handlers (ex: Changed, Connected)
 
 
 #### Internal Functions ####
@@ -199,7 +213,7 @@ def get_object(string_key, object_map):
         return None
 
 
-def handle_gui_change(data):
+def function_call_handler(data):
     try:
         # Required
         type_str = data["type"]
@@ -211,27 +225,29 @@ def handle_gui_change(data):
         arg2 = data.get("arg2", None)
         arg3 = data.get("arg3", None)
 
-        object_type_map = GUI_DOMAINS_MAP[type_str]
+        object_type_map = DOMAINS_MAP[type_str]
         obj = get_object(object_str, object_type_map)
         func = FUNCTIONS_MAP[function_str]
         args = [arg for arg in [arg1, arg2, arg3] if arg not in ["", None]]
-        func(obj, *args)
-        return "OK"
+        result = func(obj, *args)
+        if result == None:
+            return "OK"
+        return str(result)
     except Exception as e:
-        error = "GUI change: {} | with data {}".format(str(e), str(data))
+        error = "Function Error: {} | with data {}".format(str(e), str(data))
         log(str(error), "error")
         return str(error)
 
 
-def process_received_data(json_data, client):
+def process_rx_data_and_send_reply(json_data, client):
     # Client is only present when function is called from RPC server
     # Function does not send replies when invoked as a REST API reply processor
     try:
         data_dict = json.loads(json_data)
         command_type = data_dict["type"]
 
-        if command_type in GUI_DOMAINS_MAP.keys():
-            result = handle_gui_change(data_dict)
+        if command_type in DOMAINS_MAP.keys():
+            result = function_call_handler(data_dict)
             if client:
                 client.Send(result)
             return
@@ -286,7 +302,7 @@ def send_user_interaction(gui_element_data):
         ) as response:
             response_data = response.read().decode()
             log(str(response_data), "info")
-            process_received_data(response_data, None)
+            process_rx_data_and_send_reply(response_data, None)
 
     except Exception as e:
         log(str(e), "error")
@@ -318,7 +334,7 @@ def handle_unsolicited_rpc_rx(client, data):
 
         if body:
             log(str(body), "info")
-            process_received_data(body, client)
+            process_rx_data_and_send_reply(body, client)
         else:
             log("No data received", "error")
     except json.JSONDecodeError as e:
