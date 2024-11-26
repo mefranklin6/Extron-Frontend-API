@@ -3,11 +3,12 @@
 import json
 import urllib.error
 import urllib.request
+from typing import Callable
 
 from extronlib import event
 from extronlib.interface import EthernetServerInterfaceEx
 from extronlib.system import File as open
-from extronlib.system import Wait
+from extronlib.system import Timer, Wait
 
 from gui_elements.buttons import all_buttons
 from gui_elements.knobs import all_knobs
@@ -48,7 +49,6 @@ POPUPS = all_popups + all_modals
 
 GUI_DOMAINS_MAP = {
     "touch_panel": TOUCH_PANELS_MAP,
-    "popup": TOUCH_PANELS_MAP,  # Object for popups is touch panel
     "button": BUTTONS_MAP,
     "knob": KNOBS_MAP,
     "label": LABELS_MAP,
@@ -101,7 +101,18 @@ def set_enabled(obj, enabled):
 
 
 def show_popup(touch_panel, popup, duration=None):
+    if duration is None:
+        touch_panel.ShowPopup(popup)  # Default indefinite popup
+        return
     touch_panel.ShowPopup(popup, int(duration))
+
+
+def hide_all_popups(touch_panel):
+    touch_panel.HideAllPopups()
+
+
+def show_page(touch_panel, page):
+    touch_panel.ShowPage(page)
 
 
 def set_level(obj, level):
@@ -111,6 +122,8 @@ def set_level(obj, level):
 def set_range(obj, min, max, step=1):
     obj.SetRange(int(min), int(max), int(step))
 
+
+# TODO: The rest of the extronlib ui functions, or at least the most common ones
 
 #### Macro Functions ####
 
@@ -142,6 +155,8 @@ FUNCTIONS_MAP = {
     "SetBlinking": set_blinking,
     "SetEnabled": set_enabled,
     "ShowPopup": show_popup,
+    "HideAllPopups": hide_all_popups,
+    "ShowPage": show_page,
     "SetLevel": set_level,
     "SetRange": set_range,
 }
