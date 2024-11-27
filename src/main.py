@@ -16,6 +16,7 @@ from gui_elements.levels import all_levels
 from gui_elements.popups import all_modals, all_popups
 from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_touch_panels
+from hardware.relays import all_relays
 from utils import log, set_ntp
 
 with open("config.json", "r") as f:
@@ -24,13 +25,22 @@ with open("config.json", "r") as f:
 
 def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
-    try:
-        return {str(element.Name): element for element in element_list}
-    except AttributeError as e:  # Processor or TLP object
-        return {str(element.DeviceAlias): element for element in element_list}
-    except Exception as e:
-        log(str(e), "error")
-        return None
+    # GUI objects have name properties
+    # Touch Panels and Processors have DeviceAlias properties
+    # Hardware interfaces have Port properties
+    attributes_to_try = ["Name", "DeviceAlias", "Port"]
+    
+    for attr in attributes_to_try:
+        try:
+            return {str(getattr(element, attr)): element for element in element_list}
+        except AttributeError:
+            continue
+        except Exception as e:
+            log(str(e), "error")
+            return None
+    
+    log("None of the attributes {} found in elements".format(attributes_to_try), "error")
+    return None
 
 
 # Domain maps.  Key: string name, Value: object
@@ -41,6 +51,7 @@ KNOBS_MAP = make_str_obj_map(all_knobs)
 LEVELS_MAP = make_str_obj_map(all_levels)
 SLIDERS_MAP = make_str_obj_map(all_sliders)
 LABELS_MAP = make_str_obj_map(all_labels)
+RELAYS_MAP = make_str_obj_map(all_relays)
 
 # Popup/modal pages are already called using their string names,
 # so a simple list is sufficient
@@ -54,6 +65,7 @@ DOMAINS_MAP = {
     "label": LABELS_MAP,
     "level": LEVELS_MAP,
     "slider": SLIDERS_MAP,
+    "relay": RELAYS_MAP,
 }
 
 
@@ -67,12 +79,13 @@ def string_to_bool(string):
         log("Invalid boolean value: {}".format(string), "error")
         return None
 
+
 def string_to_int(string):
     """
     Interperts RPC string values received as integers.
     Supports hardware interface string syntax.
     """
-    if string in ["0","1","2"]:
+    if string in ["0", "1", "2"]:
         return int(string)
     else:
         string = string.lower()
@@ -80,6 +93,7 @@ def string_to_int(string):
             return 1
         elif string in ["open", "off"]:
             return 0
+
 
 #### Externally callable functions ####
 
@@ -134,6 +148,14 @@ def set_range(obj, min, max, step=1):
     obj.SetRange(int(min), int(max), int(step))
 
 
+def pulse(obj, duration):
+    obj.Pulse(float(duration))
+
+
+def toggle(obj):
+    obj.Toggle()
+
+
 def get_property(obj, property):
     try:
         attribute = getattr(obj, property)
@@ -181,6 +203,8 @@ FUNCTIONS_MAP = {
     "ShowPage": show_page,
     "SetLevel": set_level,
     "SetRange": set_range,
+    "Pulse": pulse,
+    "Toggle": toggle,
     "GetProperty": get_property,
 }
 
