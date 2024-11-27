@@ -17,6 +17,7 @@ from gui_elements.popups import all_modals, all_popups
 from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_touch_panels
 from hardware.relays import all_relays
+from hardware.serial import all_serial_interfaces
 from utils import log, set_ntp
 
 with open("config.json", "r") as f:
@@ -29,7 +30,7 @@ def make_str_obj_map(element_list):
     # Touch Panels and Processors have DeviceAlias properties
     # Hardware interfaces have Port properties
     attributes_to_try = ["Name", "DeviceAlias", "Port"]
-    
+
     for attr in attributes_to_try:
         try:
             return {str(getattr(element, attr)): element for element in element_list}
@@ -38,8 +39,10 @@ def make_str_obj_map(element_list):
         except Exception as e:
             log(str(e), "error")
             return None
-    
-    log("None of the attributes {} found in elements".format(attributes_to_try), "error")
+
+    log(
+        "None of the attributes {} found in elements".format(attributes_to_try), "error"
+    )
     return None
 
 
@@ -52,6 +55,7 @@ LEVELS_MAP = make_str_obj_map(all_levels)
 SLIDERS_MAP = make_str_obj_map(all_sliders)
 LABELS_MAP = make_str_obj_map(all_labels)
 RELAYS_MAP = make_str_obj_map(all_relays)
+SERIAL_INTERFACE_MAP = make_str_obj_map(all_serial_interfaces)
 
 # Popup/modal pages are already called using their string names,
 # so a simple list is sufficient
@@ -66,6 +70,7 @@ DOMAINS_MAP = {
     "level": LEVELS_MAP,
     "slider": SLIDERS_MAP,
     "relay": RELAYS_MAP,
+    "serial_interface": SERIAL_INTERFACE_MAP,
 }
 
 
@@ -156,6 +161,10 @@ def toggle(obj):
     obj.Toggle()
 
 
+def send_and_wait(obj, data, timeout):
+    return obj.SendAndWait(data, float(timeout))
+
+
 def get_property(obj, property):
     try:
         attribute = getattr(obj, property)
@@ -206,6 +215,7 @@ FUNCTIONS_MAP = {
     "Pulse": pulse,
     "Toggle": toggle,
     "GetProperty": get_property,
+    "SendAndWait": send_and_wait,
 }
 
 #### User interaction events ####
