@@ -1,12 +1,14 @@
 # Extron-Frontend-API
 
-Externally control the frontend of a system running Extron Control Script
+Externally control the frontend and hardware of a system running Extron Control Script
 
 Not affiliated with Extron
 
 ## Use Cases
 
 This project can be used to entirely replace the 'backend' (logic, device handling, anything not related to the GUI) on a control system running Extron Control Script (ECS).  This project only uses the standard libraries that come with 'Pro' (non-xi) control processors so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  Coming Soon: an example of the 'backend server' that one can build.
+
+Physical ports such as relays and serial ports on control processors are also supported.
 
 Additionally, this project allows full external control of the GUI which may be helpful for development or could allow broadcasting messages to touch panels or other uses.
 
