@@ -3,7 +3,6 @@
 import json
 import urllib.error
 import urllib.request
-from typing import Callable
 
 from extronlib import event
 from extronlib.interface import EthernetServerInterfaceEx
@@ -68,13 +67,23 @@ def string_to_bool(string):
         log("Invalid boolean value: {}".format(string), "error")
         return None
 
+def string_to_int(string):
+    """Interperts RPC string values received as integers"""
+    if string in ["0","1","2"]:
+        return int(string)
+    else:
+        string = string.lower()
+        if string in ["close", "on"]:
+            return 1
+        elif string in ["open", "off"]:
+            return 0
 
 #### Externally callable functions ####
 
 
-## Standard Extron ui Package Functions ##
+## Standard Extron Package Functions ##
 def set_state(obj, state):
-    obj.SetState(int(state))
+    obj.SetState(string_to_int(state))
 
 
 def set_fill(obj, fill):
@@ -86,8 +95,7 @@ def set_text(obj, text):
 
 
 def set_visible(obj, visible):
-    visible = string_to_bool(visible)
-    obj.SetVisible(visible)
+    obj.SetVisible(string_to_bool(visible))
 
 
 def set_blinking(obj, rate, state_list):
@@ -97,8 +105,7 @@ def set_blinking(obj, rate, state_list):
 
 
 def set_enabled(obj, enabled):
-    enabled = string_to_bool(enabled)
-    obj.SetEnabled(enabled)
+    obj.SetEnabled(string_to_bool(enabled))
 
 
 def show_popup(touch_panel, popup, duration=None):
