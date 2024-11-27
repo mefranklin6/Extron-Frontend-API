@@ -161,6 +161,10 @@ def toggle(obj):
     obj.Toggle()
 
 
+def send(obj, data):
+    obj.Send(data)
+
+
 def send_and_wait(obj, data, timeout):
     return obj.SendAndWait(data, float(timeout))
 
@@ -175,7 +179,7 @@ def get_property(obj, property):
     except Exception as e:
         log(str(e), "error")
         return e
-
+    
 
 # TODO: The rest of the extronlib ui functions, or at least the most common ones
 
@@ -215,6 +219,7 @@ FUNCTIONS_MAP = {
     "Pulse": pulse,
     "Toggle": toggle,
     "GetProperty": get_property,
+    "Send": send,
     "SendAndWait": send_and_wait,
 }
 
@@ -232,7 +237,7 @@ def any_slider_released(slider, action, value):
     slider_data = ("slider", str(slider.Name), action, str(value))
     send_user_interaction(slider_data)
 
-
+# TODO: Tapped, held
 # TODO: Knob events
 # TODO: Property Handlers (ex: Changed, Connected)
 
@@ -304,8 +309,6 @@ def process_rx_data_and_send_reply(json_data, client):
                 data = json.dumps(data).encode()
                 client.Send(data)
                 return
-
-        # TODO: Get states / Get all states
 
         else:
             log("Unknown action: {}".format(command_type), "error")
