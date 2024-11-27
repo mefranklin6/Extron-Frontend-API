@@ -6,7 +6,7 @@ Not affiliated with Extron
 
 ## Use Cases
 
-This project can be used to entirely replace the 'backend' (logic, device handling, anything not related to the GUI) on a control system running Extron Control Script (ECS).  This project only uses the standard libraries that come with 'Pro' (non-xi) control processors so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  Coming Soon: an example of the 'backend server' that one can build.
+This project can be used to entirely replace the 'backend' (logic, device handling, external connections) on a control system running Extron Control Script (ECS).  This project only uses the standard libraries that come with 'Pro' (non-xi) control processors so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  Coming Soon: an example of the 'backend server' that one can build.
 
 Physical ports such as relays and serial ports on control processors are also supported.
 
@@ -102,6 +102,8 @@ The API has been made to mirror existing methods as close as possible.  The para
 - `label`
 - `level`
 - `slider`
+- `relay`
+- `serial_interface`
 
 #### Objects are objects that fall in any of the above classes
 
@@ -139,7 +141,7 @@ To get the state of that same button:
     "type": "touch_panel",
     "object": "Btn_Power",
     "function": "GetProperty",
-    "arg1": "State
+    "arg1": "State"
 }
 ```
 
@@ -150,7 +152,7 @@ To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg
     "type": "touch_panel",
     "object": "TouchPanel_1",
     "function": "ShowPopup",
-    "arg1": "Popup1"
+    "arg1": "Popup1",
     "arg2": "5"
 }
 ```
@@ -191,6 +193,12 @@ For example, when a button called `Btn_1` is pressed, the processor will send:
 Where `value` is the current button visual state.
 
 The processor will then wait for an immidate reply, which could be instructions to set that same button to a state of `0` so the user has immidate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
+
+## Current State
+
+Currently the majority of GUI functions are supported for all GUI types, relay control, and basic serial port control passthrough.  Multiple touch panels and multiple processors are supported.  This should be enough to get most projects converted but more functionality is coming.  Pull requests to add additional functionality are appricated.  MLC support is planned.
+
+I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
 
 ## FAQ
 
