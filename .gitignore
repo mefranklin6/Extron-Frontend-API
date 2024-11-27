@@ -162,4 +162,4 @@ cython_debug/
 #.idea/
 
 *.dat
-config.json
+*.json
