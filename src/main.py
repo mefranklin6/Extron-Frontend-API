@@ -15,7 +15,7 @@ from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
 from gui_elements.popups import all_modals, all_popups
 from gui_elements.sliders import all_sliders
-from hardware import all_processors, all_touch_panels
+from hardware.hardware import all_processors, all_touch_panels
 from utils import log, set_ntp
 
 with open("config.json", "r") as f:
@@ -68,7 +68,10 @@ def string_to_bool(string):
         return None
 
 def string_to_int(string):
-    """Interperts RPC string values received as integers"""
+    """
+    Interperts RPC string values received as integers.
+    Supports hardware interface string syntax.
+    """
     if string in ["0","1","2"]:
         return int(string)
     else:
