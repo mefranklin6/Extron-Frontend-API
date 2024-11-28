@@ -168,8 +168,14 @@ def send(obj, data):
 def send_and_wait(obj, data, timeout):
     return obj.SendAndWait(data, float(timeout))
 
+
 def reboot(obj):
     obj.Reboot()
+
+
+def set_executive_mode(obj, mode):
+    obj.SetExecutiveMode(string_to_int(mode))
+
 
 def get_property(obj, property):
     try:
@@ -181,7 +187,7 @@ def get_property(obj, property):
     except Exception as e:
         log(str(e), "error")
         return e
-    
+
 
 # TODO: The rest of the extronlib ui functions, or at least the most common ones
 
@@ -225,6 +231,7 @@ FUNCTIONS_MAP = {
     "GetProperty": get_property,
     "Send": send,
     "SendAndWait": send_and_wait,
+    "SetExecutiveMode": set_executive_mode,
     "Reboot": reboot,
 }
 
@@ -241,6 +248,7 @@ def any_button_pressed(button, action):
 def any_slider_released(slider, action, value):
     slider_data = ("slider", str(slider.Name), action, str(value))
     send_user_interaction(slider_data)
+
 
 # TODO: Tapped, held
 # TODO: Knob events
