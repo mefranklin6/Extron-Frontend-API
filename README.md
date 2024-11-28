@@ -48,7 +48,7 @@ all_processors = [
 ]
  ```
 
-4. Instantiate your GUI elements into the existing lists in their respective files in the `gui_elements` folder.  Use the names that are assigned to these elements in your GUI Designer file.  Adding popups, modals and pages is optional but will help people using the RPC API as they will be listed as valid GUI elements.
+4. Instantiate your GUI elements into the existing lists in their respective files in the `gui_elements` folder.  Use the names that are assigned to these elements in your GUI Designer file.  Do the same for any hardware ports you need in `hardware`.
 
 Example
 

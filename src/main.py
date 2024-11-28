@@ -13,7 +13,6 @@ from gui_elements.buttons import all_buttons
 from gui_elements.knobs import all_knobs
 from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
-from gui_elements.popups import all_modals, all_popups
 from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
 from hardware.relays import all_relays
@@ -59,9 +58,6 @@ LABELS_MAP = make_str_obj_map(all_labels)
 RELAYS_MAP = make_str_obj_map(all_relays)
 SERIAL_INTERFACE_MAP = make_str_obj_map(all_serial_interfaces)
 
-# Popup/modal pages are already called using their string names,
-# so a simple list is sufficient
-POPUPS = all_popups + all_modals
 
 DOMAINS_MAP = {
     "processor_device": PROCESSORS_MAP,
@@ -206,8 +202,6 @@ def get_all_elements():
         "all_labels": list(LABELS_MAP.keys()),
         "all_levels": list(LEVELS_MAP.keys()),
         "all_sliders": list(SLIDERS_MAP.keys()),
-        "all_modals": all_modals,
-        "all_popups": all_popups,
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
     }
