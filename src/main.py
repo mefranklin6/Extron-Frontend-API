@@ -104,7 +104,8 @@ class PageStateMachine:
     We track state here and store all unique pages and popups called
     """
 
-    def __init__(self):
+    def __init__(self, ui_device):
+        self.ui_device = ui_device
         self.current_page = None
         self.current_popup = None  # includes modals
 
@@ -134,7 +135,13 @@ class PageStateMachine:
         self._add_to_all(popup, self.all_popups_called)
 
 
-PageState = PageStateMachine()
+PageState1 = PageStateMachine(all_ui_devices[0])
+if len(all_ui_devices) > 1:
+    PageState2 = PageStateMachine(all_ui_devices[1])
+if len(all_ui_devices) > 2:
+    PageState3 = PageStateMachine(all_ui_devices[2])
+if len(all_ui_devices) > 3:
+    PageState4 = PageStateMachine(all_ui_devices[3])
 
 #### Externally callable functions ####
 
@@ -171,17 +178,38 @@ def show_popup(ui_device, popup, duration=None):
         ui_device.ShowPopup(popup)  # Default indefinite popup
     else:
         ui_device.ShowPopup(popup, int(duration))
-    PageState.show_popup(popup, duration)
+    if ui_device == all_ui_devices[0]:
+        PageState1.show_popup(popup, duration)
+    elif ui_device == all_ui_devices[1]:
+        PageState2.show_popup(popup, duration)
+    elif ui_device == all_ui_devices[2]:
+        PageState3.show_popup(popup, duration)
+    elif ui_device == all_ui_devices[3]:
+        PageState4.show_popup(popup, duration)
 
 
 def hide_all_popups(ui_device):
     ui_device.HideAllPopups()
-    PageState.hide_all_popups()
+    if ui_device == all_ui_devices[0]:
+        PageState1.hide_all_popups()
+    elif ui_device == all_ui_devices[1]:
+        PageState2.hide_all_popups()
+    elif ui_device == all_ui_devices[2]:
+        PageState3.hide_all_popups()
+    elif ui_device == all_ui_devices[3]:
+        PageState4.hide_all_popups()
 
 
 def show_page(ui_device, page):
     ui_device.ShowPage(page)
-    PageState.set_page(page)
+    if ui_device == all_ui_devices[0]:
+        PageState1.set_page(page)
+    elif ui_device == all_ui_devices[1]:
+        PageState2.set_page(page)
+    elif ui_device == all_ui_devices[2]:
+        PageState3.set_page(page)
+    elif ui_device == all_ui_devices[3]:
+        PageState4.set_page(page)
 
 
 def set_level(obj, level):
@@ -245,10 +273,10 @@ def get_all_elements():
         "all_sliders": list(SLIDERS_MAP.keys()),
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
-        "current_page": PageState.current_page,
-        "current_popup": PageState.current_popup,
-        "all_pages_called": PageState.all_pages_called,
-        "all_popups_called": PageState.all_popups_called,
+        "current_page_ui_device1": PageState1.current_page,
+        "current_popup_ui_device_1": PageState1.current_popup,
+        "all_pages_called_ui_device_1": PageState1.all_pages_called,
+        "all_popups_called_ui_device_1": PageState1.all_popups_called,
     }
     return data
 
