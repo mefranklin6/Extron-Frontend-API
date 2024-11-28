@@ -95,7 +95,7 @@ The API has been made to mirror existing methods as close as possible.  The para
 
 #### Domains (or types) are derived from their Extron classes
 
-- `processor`
+- `processor_device`
 - `ui_device`
 - `button`
 - `knob`

@@ -62,7 +62,7 @@ SERIAL_INTERFACE_MAP = make_str_obj_map(all_serial_interfaces)
 POPUPS = all_popups + all_modals
 
 DOMAINS_MAP = {
-    "processor": PROCESSORS_MAP,
+    "processor_device": PROCESSORS_MAP,
     "ui_device": UI_DEVICE_MAP,
     "button": BUTTONS_MAP,
     "knob": KNOBS_MAP,
