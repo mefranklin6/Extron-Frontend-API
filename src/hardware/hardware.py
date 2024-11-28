@@ -1,6 +1,6 @@
 from extronlib.device import ProcessorDevice, UIDevice, eBUSDevice
 
-all_touch_panels = [
+all_ui_devices = [
     UIDevice("TouchPanel_1"),
 ]
 

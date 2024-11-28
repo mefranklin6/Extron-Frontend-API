@@ -15,7 +15,7 @@ from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
 from gui_elements.popups import all_modals, all_popups
 from gui_elements.sliders import all_sliders
-from hardware.hardware import all_processors, all_touch_panels
+from hardware.hardware import all_processors, all_ui_devices
 from hardware.relays import all_relays
 from hardware.serial import all_serial_interfaces
 from utils import log, set_ntp
@@ -27,7 +27,7 @@ with open("config.json", "r") as f:
 def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
     # GUI objects have name properties
-    # Touch Panels and Processors have DeviceAlias properties
+    # UI Devices (touch panels) and Processors have DeviceAlias properties
     # Hardware interfaces have Port properties
     attributes_to_try = ["Name", "DeviceAlias", "Port"]
 
@@ -48,7 +48,7 @@ def make_str_obj_map(element_list):
 
 # Domain maps.  Key: string name, Value: object
 PROCESSORS_MAP = make_str_obj_map(all_processors)
-TOUCH_PANELS_MAP = make_str_obj_map(all_touch_panels)
+UI_DEVICE_MAP = make_str_obj_map(all_ui_devices)
 BUTTONS_MAP = make_str_obj_map(all_buttons)
 KNOBS_MAP = make_str_obj_map(all_knobs)
 LEVELS_MAP = make_str_obj_map(all_levels)
@@ -63,7 +63,7 @@ POPUPS = all_popups + all_modals
 
 DOMAINS_MAP = {
     "processor": PROCESSORS_MAP,
-    "touch_panel": TOUCH_PANELS_MAP,
+    "ui_device": UI_DEVICE_MAP,
     "button": BUTTONS_MAP,
     "knob": KNOBS_MAP,
     "label": LABELS_MAP,
@@ -130,19 +130,19 @@ def set_enabled(obj, enabled):
     obj.SetEnabled(string_to_bool(enabled))
 
 
-def show_popup(touch_panel, popup, duration=None):
+def show_popup(ui_device, popup, duration=None):
     if duration is None:
-        touch_panel.ShowPopup(popup)  # Default indefinite popup
+        ui_device.ShowPopup(popup)  # Default indefinite popup
         return
-    touch_panel.ShowPopup(popup, int(duration))
+    ui_device.ShowPopup(popup, int(duration))
 
 
-def hide_all_popups(touch_panel):
-    touch_panel.HideAllPopups()
+def hide_all_popups(ui_device):
+    ui_device.HideAllPopups()
 
 
-def show_page(touch_panel, page):
-    touch_panel.ShowPage(page)
+def show_page(ui_device, page):
+    ui_device.ShowPage(page)
 
 
 def set_level(obj, level):
@@ -190,7 +190,7 @@ def get_all_elements():
     """Called through RPC by sending {"type": "get_all_elements"}"""
     data = {
         "all_processors": list(PROCESSORS_MAP.keys()),
-        "all_touch_panels": list(TOUCH_PANELS_MAP.keys()),
+        "all_ui_devices": list(UI_DEVICE_MAP.keys()),
         "all_buttons": list(BUTTONS_MAP.keys()),
         "all_knobs": list(KNOBS_MAP.keys()),
         "all_labels": list(LABELS_MAP.keys()),

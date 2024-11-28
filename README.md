@@ -26,7 +26,7 @@ Anything that can run Extron Control Script.  You'll need someone who holds the 
 
 Deployment is mostly unchanged from the normal process, but please pay attention to how devices and elements need to be instantiated.
 
-1. As normal, place your `.gdl` file in `layout` then setup your room configuration JSON file, but make note of the `Device Alias`'s you assign to processors and touch panels.
+1. As normal, place your `.gdl` file in `layout` then setup your room configuration JSON file, but make note of the `Device Alias`'s you assign to processors and UI Devices (touch panels).
 
 2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server coniguration.
 
@@ -38,7 +38,7 @@ Example
 # src/hardware.py
 from extronlib.device import ProcessorDevice, UIDevice, eBUSDevice
 
-all_touch_panels = [
+all_ui_devices = [
     UIDevice("TouchPanel_1"),
     UIDevice("TouchPanel_2"),
 ]
@@ -56,10 +56,10 @@ Example
 # src/gui_elements/buttons.py
 
 from extronlib.ui import Button
-from hardware import all_touch_panels
+from hardware import all_ui_devices
 
-tlp1 = all_touch_panels[0]
-tlp2 = all_touch_panels[1]
+tlp1 = all_ui_devices[0]
+tlp2 = all_ui_devices[1]
 
 all_buttons = [
     Button(tlp1, "Btn_Con_Projector"),
@@ -96,7 +96,7 @@ The API has been made to mirror existing methods as close as possible.  The para
 #### Domains (or types) are derived from their Extron classes
 
 - `processor`
-- `touch_panel`
+- `ui_device`
 - `button`
 - `knob`
 - `label`
@@ -119,7 +119,7 @@ For example, the `label` class has an attribute called `SetText`.  You would cal
 
 `GetProperty` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron Control Script documentation.
 
-`GetAllElements` with no additional arguments will return names of all objects in the system, including processors, touch panels, buttons, sliders, popups, etc.
+`GetAllElements` with no additional arguments will return names of all objects in the system, including processors, UI devices, buttons, sliders, popups, etc.
 
 ### RPC API Examples
 
@@ -149,7 +149,7 @@ To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg
 
 ```JSON
 {
-    "type": "touch_panel",
+    "type": "ui_device",
     "object": "TouchPanel_1",
     "function": "ShowPopup",
     "arg1": "Popup1",
