@@ -119,7 +119,31 @@ For example, the `label` class has an attribute called `SetText`.  You would cal
 
 `GetProperty` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron Control Script documentation.
 
+`GetProperty` can return values from the internal page/popup state machine
+
+State Machine Objects: 
+
+`PageState1` for ui_device 1, `PageState2` for ui_device 2, up to 4 total ui_devices.
+
+PageState Attributes:
+
+- `current_page`
+- `current_popup`
+- `all_pages_called` , all pages called since boot
+- `all_popups_called`, all popups and modals called since boot
+
+Example to return the current page of the first UI Device:
+```JSON
+{
+    "type": "ui_device",
+    "object": "PageState1",
+    "function": "GetProperty",
+    "arg1": "current_page"
+}
+```
+
 `GetAllElements` with no additional arguments will return names of all objects in the system, including processors, UI devices, buttons, sliders, popups, etc.
+
 
 ### RPC API Examples
 
