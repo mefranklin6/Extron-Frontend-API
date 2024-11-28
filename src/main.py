@@ -1,5 +1,3 @@
-"""Early version of replacing the Extron Control Script Backend"""
-
 import json
 import urllib.error
 import urllib.request
@@ -98,6 +96,46 @@ def string_to_int(string):
             return 0
 
 
+class PageStateMachine:
+    """
+    Extron libs do not have the ability to query
+    all possible pages and popups, nor do they have properties
+    that contain current visible pages and popups.
+    We track state here and store all unique pages and popups called
+    """
+
+    def __init__(self):
+        self.current_page = None
+        self.current_popup = None  # includes modals
+
+        # Collect all pages and popups that have been called,
+        # to try and track all possibilities
+        self.all_pages_called = []
+        self.all_popups_called = []  # includes modals
+
+    def _add_to_all(self, element, element_type_list):
+        if element not in element_type_list:
+            element_type_list.append(element)
+
+    def hide_all_popups(self):
+        self.current_modal = None
+        self.current_popup = None
+
+    def set_page(self, page):
+        self.current_page = page
+        self._add_to_all(page, self.all_pages_called)
+
+    def show_popup(self, popup, duration=None):
+        if duration is None:
+            self.current_popup = popup
+        else:
+            pass
+            # TODO: Set timer to clear self.current_popup after duration
+        self._add_to_all(popup, self.all_popups_called)
+
+
+PageState = PageStateMachine()
+
 #### Externally callable functions ####
 
 
@@ -131,16 +169,19 @@ def set_enable(obj, enabled):
 def show_popup(ui_device, popup, duration=None):
     if duration is None:
         ui_device.ShowPopup(popup)  # Default indefinite popup
-        return
-    ui_device.ShowPopup(popup, int(duration))
+    else:
+        ui_device.ShowPopup(popup, int(duration))
+    PageState.show_popup(popup, duration)
 
 
 def hide_all_popups(ui_device):
     ui_device.HideAllPopups()
+    PageState.hide_all_popups()
 
 
 def show_page(ui_device, page):
     ui_device.ShowPage(page)
+    PageState.set_page(page)
 
 
 def set_level(obj, level):
@@ -187,7 +228,7 @@ def get_property(obj, property):
         return e
 
 
-# TODO: The rest of the extronlib ui functions, or at least the most common ones
+# TODO: Add more functions as needed
 
 #### Macro Functions ####
 
@@ -204,6 +245,10 @@ def get_all_elements():
         "all_sliders": list(SLIDERS_MAP.keys()),
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
+        "current_page": PageState.current_page,
+        "current_popup": PageState.current_popup,
+        "all_pages_called": PageState.all_pages_called,
+        "all_popups_called": PageState.all_popups_called,
     }
     return data
 
