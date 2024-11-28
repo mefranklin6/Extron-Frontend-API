@@ -20,7 +20,7 @@ from utils import log, set_ntp
 with open("config.json", "r") as f:
     config = json.load(f)
 
-BUTTON_EVENTS = ["Pressed", "Released", "Held", "Repeated", "Tapped"]
+BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
 
 
 def make_str_obj_map(element_list):
