@@ -168,6 +168,8 @@ def send(obj, data):
 def send_and_wait(obj, data, timeout):
     return obj.SendAndWait(data, float(timeout))
 
+def reboot(obj):
+    obj.Reboot()
 
 def get_property(obj, property):
     try:
@@ -198,6 +200,8 @@ def get_all_elements():
         "all_sliders": list(SLIDERS_MAP.keys()),
         "all_modals": all_modals,
         "all_popups": all_popups,
+        "all_relays": list(RELAYS_MAP.keys()),
+        "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
     }
     return data
 
@@ -221,6 +225,7 @@ FUNCTIONS_MAP = {
     "GetProperty": get_property,
     "Send": send,
     "SendAndWait": send_and_wait,
+    "Reboot": reboot,
 }
 
 #### User interaction events ####
