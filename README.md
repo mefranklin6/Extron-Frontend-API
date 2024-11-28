@@ -138,7 +138,7 @@ To get the state of that same button:
 
 ```JSON
 {
-    "type": "touch_panel",
+    "type": "button",
     "object": "Btn_Power",
     "function": "GetProperty",
     "arg1": "State"
