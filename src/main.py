@@ -23,6 +23,8 @@ from utils import log, set_ntp
 with open("config.json", "r") as f:
     config = json.load(f)
 
+BUTTON_EVENTS = ["Pressed", "Released", "Held", "Repeated", "Tapped"]
+
 
 def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
@@ -238,7 +240,7 @@ FUNCTIONS_MAP = {
 #### User interaction events ####
 
 
-@event(all_buttons, "Pressed")
+@event(all_buttons, BUTTON_EVENTS)
 def any_button_pressed(button, action):
     button_data = ("button", str(button.Name), action, str(button.State))
     send_user_interaction(button_data)
