@@ -128,8 +128,8 @@ def set_blinking(obj, rate, state_list):
     obj.SetBlinking(rate, state_list)
 
 
-def set_enabled(obj, enabled):
-    obj.SetEnabled(string_to_bool(enabled))
+def set_enable(obj, enabled):
+    obj.SetEnable(string_to_bool(enabled))
 
 
 def show_popup(ui_device, popup, duration=None):
@@ -222,7 +222,7 @@ FUNCTIONS_MAP = {
     "SetText": set_text,
     "SetVisible": set_visible,
     "SetBlinking": set_blinking,
-    "SetEnabled": set_enabled,
+    "SetEnable": set_enable,
     "ShowPopup": show_popup,
     "HideAllPopups": hide_all_popups,
     "ShowPage": show_page,
@@ -252,7 +252,6 @@ def any_slider_released(slider, action, value):
     send_user_interaction(slider_data)
 
 
-# TODO: Tapped, held
 # TODO: Knob events
 # TODO: Property Handlers (ex: Changed, Connected)
 
