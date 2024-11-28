@@ -138,7 +138,7 @@ To get the state of that same button:
 
 ```JSON
 {
-    "type": "touch_panel",
+    "type": "button",
     "object": "Btn_Power",
     "function": "GetProperty",
     "arg1": "State"
@@ -174,7 +174,6 @@ In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the
 
 The processor will send user interaction events with the following structure:
 
-- Domain (type)
 - Name (of the object)
 - Action
 - Value
@@ -183,7 +182,6 @@ For example, when a button called `Btn_1` is pressed, the processor will send:
 
 ```JSON
 {
-    "type": "button",
     "name": "Btn_1",
     "action": "pressed",
     "value": "1"
@@ -191,6 +189,12 @@ For example, when a button called `Btn_1` is pressed, the processor will send:
 ```
 
 Where `value` is the current button visual state.
+
+This data will be sent to domain endpoints on the backend server.
+`http://<yourServer>:<yourPort>/api/v1/<domain>`
+
+Example:
+`http://192.168.1.1:8080/api/v1/button`
 
 The processor will then wait for an immidate reply, which could be instructions to set that same button to a state of `0` so the user has immidate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
 
