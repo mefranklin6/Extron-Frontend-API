@@ -48,8 +48,8 @@ class PageStateMachine:
             element_type_list.append(element)
 
     def hide_all_popups(self):
-        self.current_modal = None
-        self.current_popup = None
+        self.current_modal = "none"
+        self.current_popup = "none"
 
     def set_page(self, page):
         self.current_page = page
