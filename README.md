@@ -126,7 +126,7 @@ For example, the `label` class has an attribute called `SetText`.  You would cal
      - `PageState1` for ui_device 1, `PageState2` for ui_device 2, up to 4 total ui_devices.
 
     PageState Attributes:
-
+    - `ui_device`: returns the ui_device object attached to the state machine
     - `current_page`
     - `current_popup`
     - `all_pages_called` , all pages called since boot
@@ -135,7 +135,7 @@ For example, the `label` class has an attribute called `SetText`.  You would cal
     Example to return the current page of the first UI Device:
     ```JSON
     {
-        "type": "ui_device",
+        "type": "page_state",
         "object": "PageState1",
         "function": "GetProperty",
         "arg1": "current_page"

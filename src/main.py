@@ -23,6 +23,65 @@ with open("config.json", "r") as f:
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
 
 
+class PageStateMachine:
+    """
+    Extron libs do not have the ability to query
+    all possible pages and popups, nor do they have properties
+    that contain current visible pages and popups.
+    We track state here and store all unique pages and popups called
+    """
+
+    def __init__(self, ui_device, name):
+        self.ui_device = str(ui_device)
+        self.Name = name
+
+        self.current_page = "unknown"
+        self.current_popup = "unknown"  # includes modals
+
+        # Collect all pages and popups that have been called,
+        # to try and track all possibilities
+        self.all_pages_called = []
+        self.all_popups_called = []  # includes modals
+
+    def _add_to_all(self, element, element_type_list):
+        if element not in element_type_list:
+            element_type_list.append(element)
+
+    def hide_all_popups(self):
+        self.current_modal = None
+        self.current_popup = None
+
+    def set_page(self, page):
+        self.current_page = page
+        self._add_to_all(page, self.all_pages_called)
+
+    def show_popup(self, popup, duration=None):
+        if duration is None:
+            self.current_popup = popup
+        else:
+            pass
+            # TODO: Set timer to clear self.current_popup after duration
+        self._add_to_all(popup, self.all_popups_called)
+
+
+PageState1 = PageStateMachine(all_ui_devices[0], "PageState1")
+PageState2 = None
+PageState3 = None
+PageState4 = None
+if len(all_ui_devices) > 1:
+    PageState2 = PageStateMachine(all_ui_devices[1], "PageState2")
+if len(all_ui_devices) > 2:
+    PageState3 = PageStateMachine(all_ui_devices[2], "PageState3")
+if len(all_ui_devices) > 3:
+    PageState4 = PageStateMachine(all_ui_devices[3], "PageState4")
+
+all_state_machines = [
+    state_machine
+    for state_machine in [PageState1, PageState2, PageState3, PageState4]
+    if state_machine is not None
+]
+
+
 def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
     # GUI objects have name properties
@@ -45,7 +104,7 @@ def make_str_obj_map(element_list):
     return None
 
 
-# Domain maps.  Key: string name, Value: object
+# Key: string name, Value: object
 PROCESSORS_MAP = make_str_obj_map(all_processors)
 UI_DEVICE_MAP = make_str_obj_map(all_ui_devices)
 BUTTONS_MAP = make_str_obj_map(all_buttons)
@@ -55,6 +114,7 @@ SLIDERS_MAP = make_str_obj_map(all_sliders)
 LABELS_MAP = make_str_obj_map(all_labels)
 RELAYS_MAP = make_str_obj_map(all_relays)
 SERIAL_INTERFACE_MAP = make_str_obj_map(all_serial_interfaces)
+PAGE_STATES_MAP = make_str_obj_map(all_state_machines)
 
 
 DOMAINS_MAP = {
@@ -67,6 +127,7 @@ DOMAINS_MAP = {
     "slider": SLIDERS_MAP,
     "relay": RELAYS_MAP,
     "serial_interface": SERIAL_INTERFACE_MAP,
+    "page_state": PAGE_STATES_MAP,
 }
 
 
@@ -95,53 +156,6 @@ def string_to_int(string):
         elif string in ["open", "off"]:
             return 0
 
-
-class PageStateMachine:
-    """
-    Extron libs do not have the ability to query
-    all possible pages and popups, nor do they have properties
-    that contain current visible pages and popups.
-    We track state here and store all unique pages and popups called
-    """
-
-    def __init__(self, ui_device):
-        self.ui_device = ui_device
-        self.current_page = None
-        self.current_popup = None  # includes modals
-
-        # Collect all pages and popups that have been called,
-        # to try and track all possibilities
-        self.all_pages_called = []
-        self.all_popups_called = []  # includes modals
-
-    def _add_to_all(self, element, element_type_list):
-        if element not in element_type_list:
-            element_type_list.append(element)
-
-    def hide_all_popups(self):
-        self.current_modal = None
-        self.current_popup = None
-
-    def set_page(self, page):
-        self.current_page = page
-        self._add_to_all(page, self.all_pages_called)
-
-    def show_popup(self, popup, duration=None):
-        if duration is None:
-            self.current_popup = popup
-        else:
-            pass
-            # TODO: Set timer to clear self.current_popup after duration
-        self._add_to_all(popup, self.all_popups_called)
-
-
-PageState1 = PageStateMachine(all_ui_devices[0])
-if len(all_ui_devices) > 1:
-    PageState2 = PageStateMachine(all_ui_devices[1])
-if len(all_ui_devices) > 2:
-    PageState3 = PageStateMachine(all_ui_devices[2])
-if len(all_ui_devices) > 3:
-    PageState4 = PageStateMachine(all_ui_devices[3])
 
 #### Externally callable functions ####
 
@@ -273,10 +287,7 @@ def get_all_elements():
         "all_sliders": list(SLIDERS_MAP.keys()),
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
-        "current_page_ui_device1": PageState1.current_page,
-        "current_popup_ui_device_1": PageState1.current_popup,
-        "all_pages_called_ui_device_1": PageState1.all_pages_called,
-        "all_popups_called_ui_device_1": PageState1.all_popups_called,
+        "all_page_state_machines": [state.Name for state in all_state_machines],
     }
     return data
 
