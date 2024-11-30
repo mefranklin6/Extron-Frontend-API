@@ -495,6 +495,7 @@ def handle_rpc_client_connect(client, state):
     # Log the state to see if any data is sent on connection
     #log("Connection state: {}".format(state), "info")
     # TODO: Debug mode
+    pass
 
 
 @event(rpc_serv, "Disconnected")
