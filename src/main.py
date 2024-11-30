@@ -470,7 +470,7 @@ if rpc_serv.StartListen() != "Listening":
 
 @event(rpc_serv, "ReceiveData")
 def handle_unsolicited_rpc_rx(client, data):
-    #log("Rx: {}".format(data), "info")
+    # log("Rx: {}".format(data), "info")
     try:
         data_str = data.decode()
 
@@ -478,7 +478,7 @@ def handle_unsolicited_rpc_rx(client, data):
         body = data_str.split("\r\n\r\n", 1)[1]
 
         if body:
-            #log(str(body), "info")
+            # log(str(body), "info")
             process_rx_data_and_send_reply(body, client)
         else:
             log("No data received", "error")
@@ -490,10 +490,10 @@ def handle_unsolicited_rpc_rx(client, data):
 
 @event(rpc_serv, "Connected")
 def handle_rpc_client_connect(client, state):
-    #log("Client connected ({}).".format(client.IPAddress), "info")
+    # log("Client connected ({}).".format(client.IPAddress), "info")
     # client.Send(b"Connected\n")
     # Log the state to see if any data is sent on connection
-    #log("Connection state: {}".format(state), "info")
+    # log("Connection state: {}".format(state), "info")
     # TODO: Debug mode
     pass
 
