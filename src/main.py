@@ -47,8 +47,10 @@ class PageStateMachine:
         if element not in element_type_list:
             element_type_list.append(element)
 
+    def _reset_popup(self):
+        self.current_popup = "none"
+
     def hide_all_popups(self):
-        self.current_modal = "none"
         self.current_popup = "none"
 
     def set_page(self, page):
@@ -59,8 +61,9 @@ class PageStateMachine:
         if duration is None:
             self.current_popup = popup
         else:
-            pass
-            # TODO: Set timer to clear self.current_popup after duration
+            self.current_popup = popup
+            Wait(float(duration), self._reset_popup)
+
         self._add_to_all(popup, self.all_popups_called)
 
 
