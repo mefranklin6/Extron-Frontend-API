@@ -237,6 +237,14 @@ def set_range(obj, min, max, step=1):
     obj.SetRange(int(min), int(max), int(step))
 
 
+def inc(obj):
+    obj.Inc()
+
+
+def dec(obj):
+    obj.Dec()
+
+
 def pulse(obj, duration):
     obj.Pulse(float(duration))
 
@@ -295,8 +303,6 @@ def get_all_elements():
     return data
 
 
-# TODO: Timer / Level functions
-
 FUNCTIONS_MAP = {
     "SetState": set_state,
     "SetFill": set_fill,
@@ -309,6 +315,8 @@ FUNCTIONS_MAP = {
     "ShowPage": show_page,
     "SetLevel": set_level,
     "SetRange": set_range,
+    "Inc": inc,
+    "Dec": dec,
     "Pulse": pulse,
     "Toggle": toggle,
     "GetProperty": get_property,
@@ -334,7 +342,6 @@ def any_slider_released(slider, action, value):
 
 
 # TODO: Knob events
-# TODO: Property Handlers (ex: Changed, Connected)
 
 
 #### Internal Functions ####
@@ -430,11 +437,8 @@ def send_user_interaction(gui_element_data):
 
     data = json.dumps(data).encode()
 
-    log("Sending data: {}".format(str(data)), "info")
-
     headers = {"Content-Type": "application/json"}
     url = "{}/api/v1/{}".format(config["backend_server_ip"], domain)
-    log("URL: {}".format(url), "info")
 
     req = urllib.request.Request(url, data=data, headers=headers, method="PUT")
 
@@ -443,7 +447,6 @@ def send_user_interaction(gui_element_data):
             req, timeout=int(config["backend_server_timeout"])
         ) as response:
             response_data = response.read().decode()
-            log(str(response_data), "info")
             process_rx_data_and_send_reply(response_data, None)
 
     except Exception as e:
@@ -467,7 +470,7 @@ if rpc_serv.StartListen() != "Listening":
 
 @event(rpc_serv, "ReceiveData")
 def handle_unsolicited_rpc_rx(client, data):
-    log("Rx: {}".format(data), "info")
+    #log("Rx: {}".format(data), "info")
     try:
         data_str = data.decode()
 
@@ -475,7 +478,7 @@ def handle_unsolicited_rpc_rx(client, data):
         body = data_str.split("\r\n\r\n", 1)[1]
 
         if body:
-            log(str(body), "info")
+            #log(str(body), "info")
             process_rx_data_and_send_reply(body, client)
         else:
             log("No data received", "error")
@@ -487,10 +490,10 @@ def handle_unsolicited_rpc_rx(client, data):
 
 @event(rpc_serv, "Connected")
 def handle_rpc_client_connect(client, state):
-    log("Client connected ({}).".format(client.IPAddress), "info")
+    #log("Client connected ({}).".format(client.IPAddress), "info")
     # client.Send(b"Connected\n")
     # Log the state to see if any data is sent on connection
-    log("Connection state: {}".format(state), "info")
+    #log("Connection state: {}".format(state), "info")
     # TODO: Debug mode
 
 
@@ -500,7 +503,7 @@ def handle_rpc_client_disconnect(client, state):
 
 
 def Initialize():
-    # set_ntp(config["ntp_primary"], config["ntp_secondary"])
+    set_ntp(config["ntp_primary"], config["ntp_secondary"])
     log("Initialized", "info")
 
 
