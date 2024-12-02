@@ -1,6 +1,6 @@
 # Extron-Frontend-API
 
-Externally control the frontend and hardware of a system running Extron Control Script
+Externally control the frontend and hardware of a system running Extron ControlScript®
 
 Not affiliated with Extron
 
