@@ -330,13 +330,13 @@ FUNCTIONS_MAP = {
 
 
 @event(all_buttons, BUTTON_EVENTS)
-def any_button_pressed(button, action):
+def any_button_event(button, action):
     button_data = ("button", str(button.Name), action, str(button.State))
     send_user_interaction(button_data)
 
 
-@event(all_sliders, "Released")
-def any_slider_released(slider, action, value):
+@event(all_sliders, "Changed")
+def any_slider_changed(slider, action, value):
     slider_data = ("slider", str(slider.Name), action, str(value))
     send_user_interaction(slider_data)
 
