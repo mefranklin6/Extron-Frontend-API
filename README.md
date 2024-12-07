@@ -231,6 +231,10 @@ Branch `main` is the current beta development branch.  You can find features to 
 
 I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
 
+## Known Issues
+
+- Calling "ShowPopup" with an invalid popup name will not return an error  This may be a limitation of extronlib.  As a result, the page state machine will be wrong and the touch panel may not be in the desired state.  The error is written to the program log though.  Workaround: check the program log for errors and make sure you're calling valid popup names.
+
 ## FAQ
 
 Q: Wouldn't the GUI update slower vs writing the logic on the local processor since it has to contact an external server over the network then wait for a reply?

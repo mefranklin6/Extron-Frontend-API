@@ -15,12 +15,17 @@ from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
 from hardware.relays import all_relays
 from hardware.serial import all_serial_interfaces
-from utils import log, set_ntp
+from utils import set_backend_server, log, set_ntp, backend_server_ok
+import variables
+
+BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
+
 
 with open("config.json", "r") as f:
     config = json.load(f)
 
-BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
+
+
 
 
 class PageStateMachine:
@@ -438,7 +443,7 @@ def send_user_interaction(gui_element_data):
     data = json.dumps(data).encode()
 
     headers = {"Content-Type": "application/json"}
-    url = "{}/api/v1/{}".format(config["backend_server_ip"], domain)
+    url = "{}/api/v1/{}".format(variables.backend_server_ip, domain)
 
     req = urllib.request.Request(url, data=data, headers=headers, method="PUT")
 
@@ -449,9 +454,15 @@ def send_user_interaction(gui_element_data):
             response_data = response.read().decode()
             process_rx_data_and_send_reply(response_data, None)
 
+    # Timeout
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e.reason):
+            log("Request timed out", "error")
+        else:
+            log("URLError: {}".format(str(e)), "error")
+
     except Exception as e:
         log(str(e), "error")
-        print(e)
 
 
 #### RPC Server ####

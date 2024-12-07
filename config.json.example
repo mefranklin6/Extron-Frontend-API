@@ -1,5 +1,6 @@
 {
-    "backend_server_ip": "http://192.168.1.1/",
+    "primary_backend_server_ip": "http://192.168.1.1/",
+    "secondary_backend_server_ip": "http://192.168.1.2/",
     "backend_server_timeout": 5,
     "ntp_primary": "ntp1.yourorg.edu",
     "ntp_secondary": "pool.ntp.org",

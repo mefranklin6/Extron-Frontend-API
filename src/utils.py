@@ -1,4 +1,7 @@
 from extronlib.system import Ping, ProgramLog, SetAutomaticTime
+import urllib.request
+import urllib.error
+import variables
 
 
 def set_ntp(ntp_primary, ntp_secondary=None):
@@ -12,10 +15,13 @@ def set_ntp(ntp_primary, ntp_secondary=None):
         success_count, fail_count, rtt = Ping(ntp_secondary, count=1)
         if success_count > 0:
             SetAutomaticTime(ntp_secondary)
-            ProgramLog("Set NTP to secondary server at {}".format(ntp_secondary), "info")
+            ProgramLog(
+                "Set NTP to secondary server at {}".format(ntp_secondary), "info"
+            )
             return
         else:
             ProgramLog("NTP servers are unreachable", "error")
+
 
 def log(message, level="info"):
     """
@@ -28,3 +34,39 @@ def log(message, level="info"):
 
     # Log internally and allow for future log forwarding
     ProgramLog(str(message), level)
+
+
+
+
+def backend_server_ok(ip):
+    headers = {"Content-Type": "application/json"}
+    url = "{}/api/v1/{}".format(ip, "test")
+
+    req = urllib.request.Request(url, headers=headers, method="GET")
+
+    try:
+        with urllib.request.urlopen(req, timeout=2) as response:
+            response_data = response.read().decode()
+            log("Test Response: {}".format(response_data), "info")
+            if "OK" in response_data:
+                log("Backend server {} is OK".format(str(ip)), "info")
+                return True
+            else:
+                log("Backend server unknown response: {}".format(str(response_data)), "error")
+
+    # Timeout
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e.reason):
+            log("Backend server {} timed out".format(str(ip)), "error")
+        else:
+            log("URLError: {}".format(str(e)), "error")
+
+    except Exception as e:
+        log(str(e), "error")
+
+    return False
+
+
+def set_backend_server(ip):
+    variables.backend_server_ip = ip
+
