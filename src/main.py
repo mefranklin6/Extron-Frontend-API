@@ -7,6 +7,7 @@ from extronlib.interface import EthernetServerInterfaceEx
 from extronlib.system import File as open
 from extronlib.system import Timer, Wait
 
+import variables as v
 from gui_elements.buttons import all_buttons
 from gui_elements.knobs import all_knobs
 from gui_elements.labels import all_labels
@@ -15,17 +16,13 @@ from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
 from hardware.relays import all_relays
 from hardware.serial import all_serial_interfaces
-from utils import set_backend_server, log, set_ntp, backend_server_ok
-import variables
+from utils import backend_server_ok, log, set_ntp
 
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
 
 
 with open("config.json", "r") as f:
     config = json.load(f)
-
-
-
 
 
 class PageStateMachine:
@@ -308,6 +305,60 @@ def get_all_elements():
     return data
 
 
+def set_backend_server(ip=None):
+    """
+    Call example: {"type": "set_backend_server", "ip": "http://10.0.0.1:8080"}
+    
+    If no IP is provided, the function will try servers in the config.json file.
+    """
+    def _set_server(role, ip, message, log_level):
+        v.backend_server_available = True
+        v.backend_server_role = role
+        v.backend_server_ip = ip
+        log(message, log_level)
+
+    def _no_server(message):
+        v.backend_server_available = False
+        v.backend_server_role = "none"
+        v.backend_server_ip = None
+        log(message, "error")
+        for ui_device in all_ui_devices:
+            ui_device.ShowPage("NoBackendServer")
+
+    if ip: # Custom IP specified
+        if backend_server_ok(ip):
+            _set_server(
+                "custom", ip, "Using custom backend server: {}".format(ip), "warning"
+            )
+            return "OK"
+        else:
+            err = "Custom backend server {} is not available".format(ip)
+            _no_server(err)
+            return err
+    
+    # Try primary from the config
+    if backend_server_ok(config["primary_backend_server_ip"]):
+        _set_server(
+            "primary",
+            config["primary_backend_server_ip"],
+            "Using primary backend server",
+            "info",
+        )
+        return "OK"
+    # Try secondary from the config
+    elif backend_server_ok(config["secondary_backend_server_ip"]):
+        _set_server(
+            "secondary",
+            config["secondary_backend_server_ip"],
+            "Using secondary backend server",
+            "warning",
+        )
+        return "OK"
+    else:
+        _no_server("No backend servers available")
+        return "No backend servers available"
+
+
 FUNCTIONS_MAP = {
     "SetState": set_state,
     "SetFill": set_fill,
@@ -416,6 +467,13 @@ def process_rx_data_and_send_reply(json_data, client):
                 data = json.dumps(data).encode()
                 client.Send(data)
                 return
+        
+        elif command_type == "set_backend_server":
+            ip = data_dict.get("ip", None)
+            result = set_backend_server(ip)
+            if client:
+                client.Send(result)
+            return
 
         else:
             log("Unknown action: {}".format(command_type), "error")
@@ -443,7 +501,7 @@ def send_user_interaction(gui_element_data):
     data = json.dumps(data).encode()
 
     headers = {"Content-Type": "application/json"}
-    url = "{}/api/v1/{}".format(variables.backend_server_ip, domain)
+    url = "{}/api/v1/{}".format(v.backend_server_ip, domain)
 
     req = urllib.request.Request(url, data=data, headers=headers, method="PUT")
 
@@ -515,7 +573,9 @@ def handle_rpc_client_disconnect(client, state):
 
 
 def Initialize():
-    set_ntp(config["ntp_primary"], config["ntp_secondary"])
+    #set_ntp(config["ntp_primary"], config["ntp_secondary"])
+    set_backend_server()  # Using addresses from config.json
+
     log("Initialized", "info")
 
 

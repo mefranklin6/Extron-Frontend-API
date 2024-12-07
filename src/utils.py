@@ -1,7 +1,7 @@
-from extronlib.system import Ping, ProgramLog, SetAutomaticTime
-import urllib.request
 import urllib.error
-import variables
+import urllib.request
+
+from extronlib.system import Ping, ProgramLog, SetAutomaticTime
 
 
 def set_ntp(ntp_primary, ntp_secondary=None):
@@ -36,8 +36,6 @@ def log(message, level="info"):
     ProgramLog(str(message), level)
 
 
-
-
 def backend_server_ok(ip):
     headers = {"Content-Type": "application/json"}
     url = "{}/api/v1/{}".format(ip, "test")
@@ -52,7 +50,10 @@ def backend_server_ok(ip):
                 log("Backend server {} is OK".format(str(ip)), "info")
                 return True
             else:
-                log("Backend server unknown response: {}".format(str(response_data)), "error")
+                log(
+                    "Backend server unknown response: {}".format(str(response_data)),
+                    "error",
+                )
 
     # Timeout
     except urllib.error.URLError as e:
@@ -65,8 +66,3 @@ def backend_server_ok(ip):
         log(str(e), "error")
 
     return False
-
-
-def set_backend_server(ip):
-    variables.backend_server_ip = ip
-
