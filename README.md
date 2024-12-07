@@ -224,14 +224,10 @@ The processor will then wait for an immidate reply, which could be instructions 
 
 ## Current State
 
+Branch `Alpha` is the first release.
 Currently the majority of GUI functions are supported for all GUI types, relay control, and basic serial port control passthrough.  Multiple touch panels and multiple processors are supported.  This should be enough to get most projects converted but more functionality is coming.
 
-
-Future:
-
-- MLC Support (this will be a GCP file in a different repo)
-- Knob support, eBUS® and other less common hardware, tested.  (Dev enviroment was a IPCP Pro 550 and TLP 725T)
-- Tests and performance improvements.  Also tests will determine if continuous level fills would be better handled internally as opposed to a series of RPC calls.
+Branch `main` is the current beta development branch.  You can find features to be implemented and a milestone for the Beta release in Github Issues.  
 
 I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
 
