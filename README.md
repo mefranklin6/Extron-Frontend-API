@@ -22,6 +22,16 @@ Additionally, the process of deploying a system using ControlScript® Deployment
 
 Anything that can run Extron ControlScript®.  You'll need someone who holds the Extron Authorized Programmer cert to initially push the files.
 
+## Current State
+
+IMPORTANT: Branch `Alpha` is the first release.
+Currently the majority of GUI functions are supported for all GUI types, relay control, and basic serial port control passthrough.  Multiple touch panels and multiple processors are supported.  This should be enough to get most projects converted but more functionality is coming.
+
+Branch `main` is the current beta development branch and may not be 100% stable at all times.  You can find features to be implemented and a milestone for the Beta release in Github Issues.  
+
+I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
+
+
 ## Use
 
 Deployment is mostly unchanged from the normal process, but please pay attention to how devices and elements need to be instantiated.
@@ -222,14 +232,6 @@ Example:
 
 The processor will then wait for an immidate reply, which could be instructions to set that same button to a state of `0` so the user has immidate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
 
-## Current State
-
-Branch `Alpha` is the first release.
-Currently the majority of GUI functions are supported for all GUI types, relay control, and basic serial port control passthrough.  Multiple touch panels and multiple processors are supported.  This should be enough to get most projects converted but more functionality is coming.
-
-Branch `main` is the current beta development branch.  You can find features to be implemented and a milestone for the Beta release in Github Issues.  
-
-I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
 
 ## Known Issues
 
