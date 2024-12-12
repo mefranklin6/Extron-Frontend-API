@@ -8,9 +8,9 @@ Not affiliated with Extron
 
 This project can be used to entirely replace the 'backend' (logic, device handling, external connections) on a control system running Extron Control Script (ECS).  This project only uses the standard libraries that come with 'Pro' (non-xi) control processors so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  (basic proof-of-concept project here <https://github.com/mefranklin6/test-echo>)
 
-Physical ports such as relays and serial ports on control processors are also supported.
+Physical ports such as relays, serial ports and devices on a processors AVLAN are also supported.
 
-Additionally, this project allows full external control of the GUI which may be helpful for development or could allow broadcasting messages to touch panels or other uses.
+Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` or software like `Postman` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
 
 ## Reason
 
@@ -31,7 +31,6 @@ Branch `main` is the current beta development branch and may not be 100% stable 
 
 I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
 
-
 ## Use
 
 Deployment is mostly unchanged from the normal process, but please pay attention to how devices and elements need to be instantiated.
@@ -45,7 +44,7 @@ Deployment is mostly unchanged from the normal process, but please pay attention
 Example
 
 ```Python
-# src/hardware.py
+# src/hardware/hardware.py
 from extronlib.device import ProcessorDevice, UIDevice, eBUSDevice
 
 all_ui_devices = [
@@ -114,14 +113,15 @@ The API has been made to mirror existing methods as close as possible.  The para
 - `slider`
 - `relay`
 - `serial_interface`
+- `ethernet_interface` (intended for AVLAN)
 
-#### Objects are objects that fall in any of the above classes
+#### "Objects" are objects that fall in any of the above classes
 
 For processors and touch panels, pass in their `Device Alias` as setup in your standard room configuration JSON file.
 
 All other objects are referenced by their names that are set in GUI designer.
 
-#### Most functions are derived from Extron Class attributes
+#### Most functions are derived from Extron Class methods.
 
 For example, the `label` class has an attribute called `SetText`.  You would call `SetText` as the function in the API.
 
@@ -143,6 +143,7 @@ For example, the `label` class has an attribute called `SetText`.  You would cal
     - `all_popups_called`, all popups and modals called since boot
 
     Example to return the current page of the first UI Device:
+
     ```JSON
     {
         "type": "page_state",
@@ -152,8 +153,13 @@ For example, the `label` class has an attribute called `SetText`.  You would cal
     }
     ```
 
-`GetAllElements` with no additional arguments will return names of all objects in the system, including processors, UI devices, buttons, sliders, popups, etc.
+- `get_all_elements` with no additional arguments will return names of all objects in the system, including processors, UI devices, buttons, sliders, popups, etc.
 
+- `set_backend_server` will change the backend server that the processor sends user interactions to.  This is only intended to be used in case of server failure or temporary migration as the processor will try servers in the config.json first (and will fall back to the config.json servers upon processor reboot or power failure).  Example:
+
+    ```JSON
+    {"type": "set_backend_server", "ip": "http://10.0.0.1:8080"}
+    ```
 
 ### RPC API Examples
 
@@ -253,11 +259,15 @@ A: Probably not.  Please do not contact their support for help, I'm hoping this 
 
 Q: Will you post an example of a backend server?
 
-A: Yes.  As of now I only have a basic proof of concept written in Go.  Unlike this project that will work for most everyone, the backend server will be custom to your logic and your GUI.  Check back soon as i'll be posting the server example in a different repo and link it here.
+A: Yes.  As of now I only have a basic proof of concept written in Go.  Unlike this project that will work for most everyone, the backend server will be custom to your logic and your GUI.
 
 Q: What about device drivers and modules?
 
 A: The backend server i'm writing intends to use Go Microservices from <https://github.com/Dartmouth-OpenAV> for device handling.  If your equipment is not yet supported, please consider writing a microservice and contributing it to the group.
+
+Q: What about devices on AVLAN or devices that the backend server can't reach?
+
+A: Those are supported the same as serial devices and relays.  Technically you can use the processor as a proxy to all ethernet devices but it's recommended that the backend server handles as many devices that it can communicate with directly.
 
 ### Disclaimer
 
