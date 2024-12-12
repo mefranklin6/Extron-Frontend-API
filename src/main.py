@@ -16,6 +16,7 @@ from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
 from hardware.relays import all_relays
 from hardware.serial import all_serial_interfaces
+from hardware.ethernet import all_ethernet_interfaces
 from utils import backend_server_ok, log, set_ntp
 
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
@@ -89,10 +90,11 @@ all_state_machines = [
 
 def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
-    # GUI objects have name properties
-    # UI Devices (touch panels) and Processors have DeviceAlias properties
-    # Hardware interfaces have Port properties
-    attributes_to_try = ["Name", "DeviceAlias", "Port"]
+    # GUI Object: Name = "Name"
+    # UI Devices (touch panels) and Processors: Name = DeviceAlias
+    # Hardware interface = Name = "Port"
+    # Ethernet interface = Name = "Hostname"
+    attributes_to_try = ["Name", "DeviceAlias", "Port", "Hostname"]
 
     for attr in attributes_to_try:
         try:
@@ -119,6 +121,7 @@ SLIDERS_MAP = make_str_obj_map(all_sliders)
 LABELS_MAP = make_str_obj_map(all_labels)
 RELAYS_MAP = make_str_obj_map(all_relays)
 SERIAL_INTERFACE_MAP = make_str_obj_map(all_serial_interfaces)
+ETHERNET_INTERFACE_MAP = make_str_obj_map(all_ethernet_interfaces)
 PAGE_STATES_MAP = make_str_obj_map(all_state_machines)
 
 
@@ -132,6 +135,7 @@ DOMAINS_MAP = {
     "slider": SLIDERS_MAP,
     "relay": RELAYS_MAP,
     "serial_interface": SERIAL_INTERFACE_MAP,
+    "ethernet_interface": ETHERNET_INTERFACE_MAP,
     "page_state": PAGE_STATES_MAP,
 }
 
@@ -271,6 +275,25 @@ def set_executive_mode(obj, mode):
     obj.SetExecutiveMode(string_to_int(mode))
 
 
+def connect(obj, timeout=None):
+    if timeout is None:
+        obj.Connect()
+    else:
+        obj.Connect(float(timeout))
+
+
+def disconnect(obj):
+    obj.Disconnect()
+
+
+def start_keepalive(obj, interval, data):
+    obj.StartKeepAlive(float(interval), data)
+
+
+def stop_keepalive(obj):
+    obj.StopKeepAlive()
+
+
 def get_property(obj, property):
     try:
         attribute = getattr(obj, property)
@@ -300,7 +323,11 @@ def get_all_elements():
         "all_sliders": list(SLIDERS_MAP.keys()),
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
+        "all_ethernet_interfaces": str(ETHERNET_INTERFACE_MAP),
         "all_page_state_machines": [state.Name for state in all_state_machines],
+        "backend_server_available": v.backend_server_available,
+        "backend_server_role": v.backend_server_role,
+        "backend_server_ip": v.backend_server_ip,
     }
     return data
 
@@ -308,9 +335,10 @@ def get_all_elements():
 def set_backend_server(ip=None):
     """
     Call example: {"type": "set_backend_server", "ip": "http://10.0.0.1:8080"}
-    
+
     If no IP is provided, the function will try servers in the config.json file.
     """
+
     def _set_server(role, ip, message, log_level):
         v.backend_server_available = True
         v.backend_server_role = role
@@ -325,7 +353,7 @@ def set_backend_server(ip=None):
         for ui_device in all_ui_devices:
             ui_device.ShowPage("NoBackendServer")
 
-    if ip: # Custom IP specified
+    if ip:  # Custom IP specified
         if backend_server_ok(ip):
             _set_server(
                 "custom", ip, "Using custom backend server: {}".format(ip), "warning"
@@ -335,7 +363,7 @@ def set_backend_server(ip=None):
             err = "Custom backend server {} is not available".format(ip)
             _no_server(err)
             return err
-    
+
     # Try primary from the config
     if backend_server_ok(config["primary_backend_server_ip"]):
         _set_server(
@@ -380,6 +408,10 @@ FUNCTIONS_MAP = {
     "SendAndWait": send_and_wait,
     "SetExecutiveMode": set_executive_mode,
     "Reboot": reboot,
+    "Connect": connect,
+    "Disconnect": disconnect,
+    "StartKeepAlive": start_keepalive,
+    "StopKeepAlive": stop_keepalive,
 }
 
 #### User interaction events ####
@@ -467,7 +499,7 @@ def process_rx_data_and_send_reply(json_data, client):
                 data = json.dumps(data).encode()
                 client.Send(data)
                 return
-        
+
         elif command_type == "set_backend_server":
             ip = data_dict.get("ip", None)
             result = set_backend_server(ip)
@@ -573,7 +605,7 @@ def handle_rpc_client_disconnect(client, state):
 
 
 def Initialize():
-    #set_ntp(config["ntp_primary"], config["ntp_secondary"])
+    set_ntp(config["ntp_primary"], config["ntp_secondary"])
     set_backend_server()  # Using addresses from config.json
 
     log("Initialized", "info")
