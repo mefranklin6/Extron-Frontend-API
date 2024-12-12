@@ -123,7 +123,7 @@ All other objects are referenced by their names that are set in GUI designer.
 
 #### Most functions are derived from Extron Class methods.
 
-For example, the `label` class has an attribute called `SetText`.  You would call `SetText` as the function in the API.
+For example, the `label` class has a method called `SetText`.  You would call `SetText` as the function in the API.
 
 #### Additional functions which have been added
 
