@@ -1,5 +1,3 @@
-from extronlib.device import ProcessorDevice
-
 from extronlib.interface import EthernetClientInterface
 
 """

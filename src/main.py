@@ -13,10 +13,10 @@ from gui_elements.knobs import all_knobs
 from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
 from gui_elements.sliders import all_sliders
+from hardware.ethernet import all_ethernet_interfaces
 from hardware.hardware import all_processors, all_ui_devices
 from hardware.relays import all_relays
 from hardware.serial import all_serial_interfaces
-from hardware.ethernet import all_ethernet_interfaces
 from utils import backend_server_ok, log, set_ntp
 
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
