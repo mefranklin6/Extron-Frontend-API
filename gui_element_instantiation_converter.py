@@ -148,6 +148,7 @@ def start_conversion():
     converter = InstantionConverter(selected_directory)
     converter.bundle_and_save()
     print("Conversion complete")
+    exit()
 
 
 root = tk.Tk()
@@ -155,7 +156,7 @@ root.title("GUI Instantiation Converter")
 
 label = tk.Label(
     root,
-    text="Please select the directory that your GUI elements may be instantiated in.",
+    text="Please select the directory that your GUI elements might be instantiated in.",
 )
 label.pack(pady=10)
 
