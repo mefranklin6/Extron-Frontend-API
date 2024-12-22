@@ -2,7 +2,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 
-"""
+info = """
 This is a utility script for converting your existing GUI element instantiations
 into a format compatible with Extron-Frontend-API (mefranklin6)
 
@@ -23,6 +23,11 @@ all_buttons = [
     Button(TLP1, 101),
     Button(TLP1, 102),
 ]
+
+
+This should be safe to run against your entire old repository,
+and will find all instances of GUI element instantiations and process them
+in a single run, recursively.
 
 """
 
@@ -156,7 +161,7 @@ root.title("GUI Instantiation Converter")
 
 label = tk.Label(
     root,
-    text="Please select the directory that your GUI elements might be instantiated in.",
+    text=info
 )
 label.pack(pady=10)
 
