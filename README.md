@@ -77,6 +77,8 @@ all_buttons = [
 ]
 ```
 
+> **Note:** If you are converting an existing project, you can use the included `gui_element_instantiation_converter.py` script to automatically populate the above lists from your old files.
+
 5. Deploy as normal using CSDU.  Re-deploy if you update your GUI Designer File or if you change hardware.
 
 ## Architecture
