@@ -161,9 +161,11 @@ root.title("GUI Instantiation Converter")
 
 label = tk.Label(
     root,
-    text=info
+    text=info,
+    anchor="w",
+    justify="left"
 )
-label.pack(pady=10)
+label.pack(pady=10, fill="both")
 
 button_select = tk.Button(root, text="Select Directory", command=select_directory)
 button_select.pack(pady=5)
