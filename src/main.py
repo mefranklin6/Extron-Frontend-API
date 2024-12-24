@@ -522,7 +522,11 @@ def process_rx_data_and_send_reply(json_data, client):
             client.Send(b"Error processing data : {}".format(str(e)))
 
 
-def send_user_interaction(gui_element_data):
+def handle_backend_server_timeout():
+    pass
+
+
+def format_user_interaction_data(gui_element_data):
     domain = gui_element_data[0]
     data = {
         "name": gui_element_data[1],
@@ -531,12 +535,13 @@ def send_user_interaction(gui_element_data):
     }
 
     data = json.dumps(data).encode()
-
     headers = {"Content-Type": "application/json"}
     url = "{}/api/v1/{}".format(v.backend_server_ip, domain)
-
     req = urllib.request.Request(url, data=data, headers=headers, method="PUT")
+    return req
 
+
+def send_to_backend_server(req):
     try:
         with urllib.request.urlopen(
             req, timeout=int(config["backend_server_timeout"])
@@ -548,11 +553,17 @@ def send_user_interaction(gui_element_data):
     except urllib.error.URLError as e:
         if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e.reason):
             log("Request timed out", "error")
+            handle_backend_server_timeout()
         else:
             log("URLError: {}".format(str(e)), "error")
 
     except Exception as e:
         log(str(e), "error")
+
+
+def send_user_interaction(gui_element_data):
+    req = format_user_interaction_data(gui_element_data)
+    send_to_backend_server(req)
 
 
 #### RPC Server ####
