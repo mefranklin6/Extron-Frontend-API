@@ -243,7 +243,6 @@ Example:
 
 The processor will then wait for an immidate reply, which could be instructions to set that same button to a state of `0` so the user has immidate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
 
-
 ## Known Issues
 
 - Calling "ShowPopup" with an invalid popup name will not return an error  This may be a limitation of extronlib.  As a result, the page state machine will be wrong and the touch panel may not be in the desired state.  The error is written to the program log though.  Workaround: check the program log for errors and make sure you're calling valid popup names.
@@ -273,6 +272,53 @@ A: The backend server i'm writing intends to use Go Microservices from <https://
 Q: What about devices on AVLAN or devices that the backend server can't reach?
 
 A: Those are supported the same as serial devices and relays.  Technically you can use the processor as a proxy to all ethernet devices but it's recommended that the backend server handles as many devices that it can communicate with directly.
+
+### AVLAN Device Control over SSH Example
+
+First, instantiate your devices in `src/hardware/ethernet.py` like such:
+
+```py
+# src/hardware/ethernet.py
+from extronlib.interface import EthernetClientInterface
+
+all_ethernet_interfaces = [
+    EthernetClientInterface('test-IN1804', 22023, Protocol='SSH', Credentials=('admin', 'your_password')),
+]
+```
+
+Then we'll need to connect to the device.  If you are connecting to an Extron device the authentication should be handled in the background for you upon sending the connect command.
+
+```json
+{
+    "type": "EthernetClientInterface",
+    "object": "test-IN1804",
+    "function": "Connect",
+}
+```
+
+Optionally, if you would like to keep the connection alive, you can use `StartKeepAlive` where `arg1` is the keepalive interval and `arg2` is the data to send.  For example, we'll query the firmware version every 5 seconds as our keepalive.  
+
+```json
+{
+    "type": "EthernetClientInterface",
+    "object": "test-IN1804",
+    "function": "StartKeepAlive",
+    "arg1": "5",
+    "arg2": "Q\n"
+}
+```
+
+After we're connected, we can start sending commands.  We'll use the `SendAndWait` method to change the input of the 1804 to input 2.  `arg1` is the data to send and `arg2` is the timeout period.
+
+```json
+{
+    "type": "EthernetClientInterface",
+    "object": "test-IN1804",
+    "function": "SendAndWait",
+    "arg1": "2!\n",
+    "arg2": "1"
+}
+```
 
 ### Disclaimer
 
