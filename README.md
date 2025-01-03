@@ -124,7 +124,7 @@ For processors and touch panels, pass in their `Device Alias` as setup in your s
 
 All other objects are referenced by their names that are set in GUI designer.
 
-#### Most functions are derived from Extron Class methods.
+#### Most functions are derived from Extron Class methods
 
 For example, the `Label` class has a method called `SetText`.  You would call `SetText` as the function in the API.
 
@@ -136,16 +136,16 @@ For example, the `Label` class has a method called `SetText`.  You would call `S
 
 - `get_property` can return values from the internal page/popup state machine
 
-    State Machine Objects: 
+    State Machine Objects:
 
-     - `page_state_1` for ui_device 1, `page_state_2` for ui_device 2, up to 4 total ui_devices.
+  - `page_state_1` for ui_device 1, `page_state_2` for ui_device 2, up to 4 total ui_devices.
 
     PageState Attributes:
-    - `ui_device`: returns the ui_device object attached to the state machine
-    - `current_page`
-    - `current_popup`
-    - `all_pages_called` , all pages called since boot
-    - `all_popups_called`, all popups and modals called since boot
+  - `ui_device`: returns the ui_device object attached to the state machine
+  - `current_page`
+  - `current_popup`
+  - `all_pages_called` , all pages called since boot
+  - `all_popups_called`, all popups and modals called since boot
 
     Example to return the current page of the first UI Device:
 
@@ -275,6 +275,8 @@ A: Those are supported the same as serial devices and relays.  Technically you c
 
 ### AVLAN Device Control over SSH Example
 
+The below is an example of how to control devices that are connected to a processors isolated AVLAN network.  This example is similar to how you would use serial devices connected to the processor as well.
+
 First, instantiate your devices in `src/hardware/ethernet.py` like such:
 
 ```py
@@ -282,11 +284,16 @@ First, instantiate your devices in `src/hardware/ethernet.py` like such:
 from extronlib.interface import EthernetClientInterface
 
 all_ethernet_interfaces = [
-    EthernetClientInterface('test-IN1804', 22023, Protocol='SSH', Credentials=('admin', 'your_password')),
+    EthernetClientInterface(
+        Hostname='test-IN1804', 
+        IPPort=22023, 
+        Protocol='SSH', 
+        Credentials=('admin', 'your_password')
+    ),
 ]
 ```
 
-Then we'll need to connect to the device.  If you are connecting to an Extron device the authentication should be handled in the background for you upon sending the connect command.
+Then we'll need to connect to the device.  If you are connecting to an Extron device the authentication should be handled in the background for you upon sending the `Connect` command.
 
 ```json
 {
@@ -317,6 +324,24 @@ After we're connected, we can start sending commands.  We'll use the `SendAndWai
     "function": "SendAndWait",
     "arg1": "2!\n",
     "arg2": "1"
+}
+```
+
+If you're having issues, make sure your connection was successfull and you are using the correct hostname.  You can check that by looking at all elements.
+
+```json
+{
+    "type": "get_all_elements"
+}
+```
+
+That will return the connection information under `all_ethernet_interfaces` like such (our hostname is "test-1804"):
+
+```json
+{
+    ...<other data>
+    "all_ethernet_interfaces": "{'test-1804': EthernetClient test-1804:22023 - :SSH Connected}",
+    ...
 }
 ```
 
