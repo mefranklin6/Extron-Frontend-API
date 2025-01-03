@@ -281,9 +281,9 @@ def set_executive_mode(obj, mode):
 
 def connect(obj, timeout=None):
     if timeout is None:
-        obj.Connect()
+        return obj.Connect()
     else:
-        obj.Connect(float(timeout))
+        return obj.Connect(float(timeout))
 
 
 def disconnect(obj):
