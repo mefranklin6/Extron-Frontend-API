@@ -129,6 +129,8 @@ For example, the `label` class has a method called `SetText`.  You would call `S
 
 #### Additional functions which have been added
 
+Hint: Built-in ECS functionality uses the same `PascalCase` as written by Extron.  Additional features added in this project use `snake_case`. 
+
 - `GetProperty` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron ControlScript® documentation.
 
 - `GetProperty` can return values from the internal page/popup state machine
@@ -169,7 +171,7 @@ To set a button called `Btn_Power` to a state of `1`, you would use the followin
 
 ```JSON
 {
-    "type": "button",
+    "type": "Button",
     "object": "Btn_Power",
     "function": "SetState",
     "arg1": "1"
@@ -180,7 +182,7 @@ To get the state of that same button:
 
 ```JSON
 {
-    "type": "button",
+    "type": "Button",
     "object": "Btn_Power",
     "function": "GetProperty",
     "arg1": "State"
@@ -191,7 +193,7 @@ To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg
 
 ```JSON
 {
-    "type": "ui_device",
+    "type": "UIDevice",
     "object": "TouchPanel_1",
     "function": "ShowPopup",
     "arg1": "Popup1",
@@ -204,7 +206,7 @@ In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the
 
 ```JSON
 {
-    "type": "button",
+    "type": "Button",
     "object": "Btn_1",
     "function": "SetBlinking",
     "arg1": "Medium",

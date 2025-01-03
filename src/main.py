@@ -126,16 +126,16 @@ PAGE_STATES_MAP = make_str_obj_map(all_state_machines)
 
 
 DOMAINS_MAP = {
-    "processor_device": PROCESSORS_MAP,
-    "ui_device": UI_DEVICE_MAP,
-    "button": BUTTONS_MAP,
-    "knob": KNOBS_MAP,
-    "label": LABELS_MAP,
-    "level": LEVELS_MAP,
-    "slider": SLIDERS_MAP,
-    "relay": RELAYS_MAP,
-    "serial_interface": SERIAL_INTERFACE_MAP,
-    "ethernet_interface": ETHERNET_INTERFACE_MAP,
+    "ProcessorDevice": PROCESSORS_MAP,
+    "UIDevice": UI_DEVICE_MAP,
+    "Button": BUTTONS_MAP,
+    "Knob": KNOBS_MAP,
+    "Label": LABELS_MAP,
+    "Level": LEVELS_MAP,
+    "Slider": SLIDERS_MAP,
+    "RelayInterface": RELAYS_MAP,
+    "SerialInterface": SERIAL_INTERFACE_MAP,
+    "EthernetClientInterface": ETHERNET_INTERFACE_MAP,
     "page_state": PAGE_STATES_MAP,
 }
 
@@ -294,7 +294,7 @@ def stop_keepalive(obj):
     obj.StopKeepAlive()
 
 
-def get_property(obj, property):
+def get_property_(obj, property):
     try:
         attribute = getattr(obj, property)
         return attribute
@@ -403,7 +403,7 @@ FUNCTIONS_MAP = {
     "Dec": dec,
     "Pulse": pulse,
     "Toggle": toggle,
-    "GetProperty": get_property,
+    "get_property": get_property_,
     "Send": send,
     "SendAndWait": send_and_wait,
     "SetExecutiveMode": set_executive_mode,
@@ -510,7 +510,7 @@ def process_rx_data_and_send_reply(json_data, client):
         else:
             log("Unknown action: {}".format(command_type), "error")
             if client:
-                client.Send(b"Unknown action\n")
+                client.Send(b"Unknown action{}\n".format(command_type))
 
     except (json.JSONDecodeError, KeyError) as e:
         log("Error processing JSON data: {}".format(str(e)), "error")
