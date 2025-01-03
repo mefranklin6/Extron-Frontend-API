@@ -106,16 +106,17 @@ The API has been made to mirror existing methods as close as possible.  The para
 
 #### Domains (or types) are derived from their Extron classes
 
-- `processor_device`
-- `ui_device`
-- `button`
-- `knob`
-- `label`
-- `level`
-- `slider`
-- `relay`
-- `serial_interface`
-- `ethernet_interface` (intended for AVLAN)
+- `ProcessorDevice`
+- `UIDevice`
+- `Button`
+- `Knob`
+- `Label`
+- `Level`
+- `Slider`
+- `RelayInterface`
+- `SerialInterface`
+- `EthernetClientInterface` (intended for AVLAN)
+- `page_state` (custom class)
 
 #### "Objects" are objects that fall in any of the above classes
 
@@ -125,19 +126,19 @@ All other objects are referenced by their names that are set in GUI designer.
 
 #### Most functions are derived from Extron Class methods.
 
-For example, the `label` class has a method called `SetText`.  You would call `SetText` as the function in the API.
+For example, the `Label` class has a method called `SetText`.  You would call `SetText` as the function in the API.
 
 #### Additional functions which have been added
 
-Hint: Built-in ECS functionality uses the same `PascalCase` as written by Extron.  Additional features added in this project use `snake_case`. 
+*Hint: Built-in ECS functionality uses the same `PascalCase` as written by Extron.  Additional methods, macros or classes added in this project use `snake_case`.*
 
-- `GetProperty` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron ControlScript® documentation.
+- `get_property` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron ControlScript® documentation.
 
-- `GetProperty` can return values from the internal page/popup state machine
+- `get_property` can return values from the internal page/popup state machine
 
     State Machine Objects: 
 
-     - `PageState1` for ui_device 1, `PageState2` for ui_device 2, up to 4 total ui_devices.
+     - `page_state_1` for ui_device 1, `page_state_2` for ui_device 2, up to 4 total ui_devices.
 
     PageState Attributes:
     - `ui_device`: returns the ui_device object attached to the state machine
@@ -151,8 +152,8 @@ Hint: Built-in ECS functionality uses the same `PascalCase` as written by Extron
     ```JSON
     {
         "type": "page_state",
-        "object": "PageState1",
-        "function": "GetProperty",
+        "object": "page_state_1",
+        "function": "get_property",
         "arg1": "current_page"
     }
     ```
@@ -184,7 +185,7 @@ To get the state of that same button:
 {
     "type": "Button",
     "object": "Btn_Power",
-    "function": "GetProperty",
+    "function": "get_property",
     "arg1": "State"
 }
 ```
