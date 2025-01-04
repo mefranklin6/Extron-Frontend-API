@@ -70,20 +70,20 @@ class PageStateMachine:
         self._add_to_all(popup, self.all_popups_called)
 
 
-PageState1 = PageStateMachine(all_ui_devices[0], "PageState1")
-PageState2 = None
-PageState3 = None
-PageState4 = None
+page_state_1 = PageStateMachine(all_ui_devices[0], "PageState1")
+page_state_2 = None
+page_state_3 = None
+page_state_4 = None
 if len(all_ui_devices) > 1:
-    PageState2 = PageStateMachine(all_ui_devices[1], "PageState2")
+    page_state_2 = PageStateMachine(all_ui_devices[1], "PageState2")
 if len(all_ui_devices) > 2:
-    PageState3 = PageStateMachine(all_ui_devices[2], "PageState3")
+    page_state_3 = PageStateMachine(all_ui_devices[2], "PageState3")
 if len(all_ui_devices) > 3:
-    PageState4 = PageStateMachine(all_ui_devices[3], "PageState4")
+    page_state_4 = PageStateMachine(all_ui_devices[3], "PageState4")
 
 all_state_machines = [
     state_machine
-    for state_machine in [PageState1, PageState2, PageState3, PageState4]
+    for state_machine in [page_state_1, page_state_2, page_state_3, page_state_4]
     if state_machine is not None
 ]
 
@@ -92,7 +92,7 @@ def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
     # GUI Object: Name = "Name"
     # UI Devices (touch panels) and Processors: Name = DeviceAlias
-    # Hardware interface = Name = "Port"
+    # Hardware interface = Name = "Port", ex: "COM1"
     # Ethernet interface = Name = "Hostname"
     attributes_to_try = ["Name", "DeviceAlias", "Port", "Hostname"]
 
@@ -112,6 +112,7 @@ def make_str_obj_map(element_list):
 
 
 # Key: string name, Value: object
+## Standard Extron Classes ##
 PROCESSORS_MAP = make_str_obj_map(all_processors)
 UI_DEVICE_MAP = make_str_obj_map(all_ui_devices)
 BUTTONS_MAP = make_str_obj_map(all_buttons)
@@ -122,20 +123,23 @@ LABELS_MAP = make_str_obj_map(all_labels)
 RELAYS_MAP = make_str_obj_map(all_relays)
 SERIAL_INTERFACE_MAP = make_str_obj_map(all_serial_interfaces)
 ETHERNET_INTERFACE_MAP = make_str_obj_map(all_ethernet_interfaces)
+## Custom Classes ##
 PAGE_STATES_MAP = make_str_obj_map(all_state_machines)
 
 
-DOMAINS_MAP = {
-    "processor_device": PROCESSORS_MAP,
-    "ui_device": UI_DEVICE_MAP,
-    "button": BUTTONS_MAP,
-    "knob": KNOBS_MAP,
-    "label": LABELS_MAP,
-    "level": LEVELS_MAP,
-    "slider": SLIDERS_MAP,
-    "relay": RELAYS_MAP,
-    "serial_interface": SERIAL_INTERFACE_MAP,
-    "ethernet_interface": ETHERNET_INTERFACE_MAP,
+DOMAIN_CLASS_MAP = {
+    ## Standard Extron Classes ##
+    "ProcessorDevice": PROCESSORS_MAP,
+    "UIDevice": UI_DEVICE_MAP,
+    "Button": BUTTONS_MAP,
+    "Knob": KNOBS_MAP,
+    "Label": LABELS_MAP,
+    "Level": LEVELS_MAP,
+    "Slider": SLIDERS_MAP,
+    "RelayInterface": RELAYS_MAP,
+    "SerialInterface": SERIAL_INTERFACE_MAP,
+    "EthernetClientInterface": ETHERNET_INTERFACE_MAP,
+    ## Custom Classes ##
     "page_state": PAGE_STATES_MAP,
 }
 
@@ -169,7 +173,7 @@ def string_to_int(string):
 #### Externally callable functions ####
 
 
-## Standard Extron Package Functions ##
+## Standard Extron Methods ##
 def set_state(obj, state):
     obj.SetState(string_to_int(state))
 
@@ -202,37 +206,37 @@ def show_popup(ui_device, popup, duration=None):
     else:
         ui_device.ShowPopup(popup, int(duration))
     if ui_device == all_ui_devices[0]:
-        PageState1.show_popup(popup, duration)
+        page_state_1.show_popup(popup, duration)
     elif ui_device == all_ui_devices[1]:
-        PageState2.show_popup(popup, duration)
+        page_state_2.show_popup(popup, duration)
     elif ui_device == all_ui_devices[2]:
-        PageState3.show_popup(popup, duration)
+        page_state_3.show_popup(popup, duration)
     elif ui_device == all_ui_devices[3]:
-        PageState4.show_popup(popup, duration)
+        page_state_4.show_popup(popup, duration)
 
 
 def hide_all_popups(ui_device):
     ui_device.HideAllPopups()
     if ui_device == all_ui_devices[0]:
-        PageState1.hide_all_popups()
+        page_state_1.hide_all_popups()
     elif ui_device == all_ui_devices[1]:
-        PageState2.hide_all_popups()
+        page_state_2.hide_all_popups()
     elif ui_device == all_ui_devices[2]:
-        PageState3.hide_all_popups()
+        page_state_3.hide_all_popups()
     elif ui_device == all_ui_devices[3]:
-        PageState4.hide_all_popups()
+        page_state_4.hide_all_popups()
 
 
 def show_page(ui_device, page):
     ui_device.ShowPage(page)
     if ui_device == all_ui_devices[0]:
-        PageState1.set_page(page)
+        page_state_1.set_page(page)
     elif ui_device == all_ui_devices[1]:
-        PageState2.set_page(page)
+        page_state_2.set_page(page)
     elif ui_device == all_ui_devices[2]:
-        PageState3.set_page(page)
+        page_state_3.set_page(page)
     elif ui_device == all_ui_devices[3]:
-        PageState4.set_page(page)
+        page_state_4.set_page(page)
 
 
 def set_level(obj, level):
@@ -277,9 +281,9 @@ def set_executive_mode(obj, mode):
 
 def connect(obj, timeout=None):
     if timeout is None:
-        obj.Connect()
+        return obj.Connect()
     else:
-        obj.Connect(float(timeout))
+        return obj.Connect(float(timeout))
 
 
 def disconnect(obj):
@@ -294,7 +298,10 @@ def stop_keepalive(obj):
     obj.StopKeepAlive()
 
 
-def get_property(obj, property):
+## Custom Methods ##
+
+
+def get_property_(obj, property):
     try:
         attribute = getattr(obj, property)
         return attribute
@@ -306,12 +313,12 @@ def get_property(obj, property):
         return e
 
 
-# TODO: Add more functions as needed
+# TODO: Add more methods as needed
 
-#### Macro Functions ####
+#### Macros ####
 
 
-def get_all_elements():
+def get_all_elements_():
     """Called through RPC by sending {"type": "get_all_elements"}"""
     data = {
         "all_processors": list(PROCESSORS_MAP.keys()),
@@ -332,7 +339,7 @@ def get_all_elements():
     return data
 
 
-def set_backend_server(ip=None):
+def set_backend_server_(ip=None):
     """
     Call example: {"type": "set_backend_server", "ip": "http://10.0.0.1:8080"}
 
@@ -387,7 +394,10 @@ def set_backend_server(ip=None):
         return "No backend servers available"
 
 
-FUNCTIONS_MAP = {
+METHODS_MAP = {
+    # All 'methods' take "type", "object", "function" as required arguments
+    # and "arg1", "arg2", "arg3" as optional arguments.
+    # This is different from 'macros' which can have custom call formats
     "SetState": set_state,
     "SetFill": set_fill,
     "SetText": set_text,
@@ -403,7 +413,6 @@ FUNCTIONS_MAP = {
     "Dec": dec,
     "Pulse": pulse,
     "Toggle": toggle,
-    "GetProperty": get_property,
     "Send": send,
     "SendAndWait": send_and_wait,
     "SetExecutiveMode": set_executive_mode,
@@ -412,6 +421,12 @@ FUNCTIONS_MAP = {
     "Disconnect": disconnect,
     "StartKeepAlive": start_keepalive,
     "StopKeepAlive": stop_keepalive,
+    "get_property": get_property_,
+}
+
+MACROS_MAP = {
+    "get_all_elements": get_all_elements_,
+    "set_backend_server": set_backend_server_,
 }
 
 #### User interaction events ####
@@ -452,7 +467,7 @@ def get_object(string_key, object_map):
         return None
 
 
-def function_call_handler(data):
+def method_call_handler(data):
     try:
         # Required
         type_str = data["type"]
@@ -464,9 +479,9 @@ def function_call_handler(data):
         arg2 = data.get("arg2", None)
         arg3 = data.get("arg3", None)
 
-        object_type_map = DOMAINS_MAP[type_str]
+        object_type_map = DOMAIN_CLASS_MAP[type_str]
         obj = get_object(object_str, object_type_map)
-        func = FUNCTIONS_MAP[function_str]
+        func = METHODS_MAP[function_str]
         args = [arg for arg in [arg1, arg2, arg3] if arg not in ["", None]]
         result = func(obj, *args)
         if result == None:
@@ -478,6 +493,24 @@ def function_call_handler(data):
         return str(error)
 
 
+def macro_call_handler(command_type, client=None, data_dict=None):
+    if command_type == "get_all_elements":
+        if not client:
+            return
+        else:
+            data = get_all_elements_()
+            data = json.dumps(data).encode()
+            client.Send(data)
+            return
+
+    elif command_type == "set_backend_server":
+        ip = data_dict.get("ip", None)
+        result = set_backend_server_(ip)
+        if client:
+            client.Send(result)
+        return
+
+
 def process_rx_data_and_send_reply(json_data, client):
     # Client is only present when function is called from RPC server
     # Function does not send replies when invoked as a REST API reply processor
@@ -485,37 +518,24 @@ def process_rx_data_and_send_reply(json_data, client):
         data_dict = json.loads(json_data)
         command_type = data_dict["type"]
 
-        if command_type in DOMAINS_MAP.keys():
-            result = function_call_handler(data_dict)
+        if command_type in DOMAIN_CLASS_MAP.keys():
+            result = method_call_handler(data_dict)
             if client:
                 client.Send(result)
             return
 
-        elif command_type == "get_all_elements":
-            if not client:
-                return
-            else:
-                data = get_all_elements()
-                data = json.dumps(data).encode()
-                client.Send(data)
-                return
-
-        elif command_type == "set_backend_server":
-            ip = data_dict.get("ip", None)
-            result = set_backend_server(ip)
-            if client:
-                client.Send(result)
-            return
+        elif command_type in MACROS_MAP.keys():
+            macro_call_handler(command_type, client, data_dict)
 
         else:
             log("Unknown action: {}".format(command_type), "error")
             if client:
-                client.Send(b"Unknown action\n")
+                client.Send(b"Unknown action{}\n".format(command_type))
 
     except (json.JSONDecodeError, KeyError) as e:
-        log("Error processing JSON data: {}".format(str(e)), "error")
+        log("Error decoding JSON: {}".format(str(e)), "error")
         if client:
-            client.Send(b"Error processing JSON data\n")
+            client.Send(b"Error decoding JSON : {}\n".format(e))
     except Exception as e:
         log(str(e), "error")
         if client:
@@ -617,7 +637,7 @@ def handle_rpc_client_disconnect(client, state):
 
 def Initialize():
     set_ntp(config["ntp_primary"], config["ntp_secondary"])
-    set_backend_server()  # Using addresses from config.json
+    set_backend_server_()  # Using addresses from config.json
 
     log("Initialized", "info")
 

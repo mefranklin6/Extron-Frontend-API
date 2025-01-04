@@ -10,7 +10,7 @@ This project can be used to entirely replace the 'backend' (logic, device handli
 
 Physical ports such as relays, serial ports and devices on a processors AVLAN are also supported.
 
-Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` or software like `Postman` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
+Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
 
 ## Reason
 
@@ -100,22 +100,23 @@ The RPC API is structured as such:
 
 For simplicity sake **all JSON values are strings**.  The API will type convert appropriately.
 
-Due to limitations in the built-in server library, the RPC api runs `HTTP 0.9`
+Due to limitations in the built-in server library, the RPC api runs `HTTP 0.9`.  Unfortunately that means that the current version of Postman will not work for API testing.
 
 The API has been made to mirror existing methods as close as possible.  The paramaters in the form of `arg1`, `arg2`, `arg3` are simply paramaters that need to be passed to the control script function.   The `ControlScript® Documentation` document provided by Extron will prove helpful in determing how to use the RPC API.
 
 #### Domains (or types) are derived from their Extron classes
 
-- `processor_device`
-- `ui_device`
-- `button`
-- `knob`
-- `label`
-- `level`
-- `slider`
-- `relay`
-- `serial_interface`
-- `ethernet_interface` (intended for AVLAN)
+- `ProcessorDevice`
+- `UIDevice`
+- `Button`
+- `Knob`
+- `Label`
+- `Level`
+- `Slider`
+- `RelayInterface`
+- `SerialInterface`
+- `EthernetClientInterface` (intended for AVLAN)
+- `page_state` (custom class)
 
 #### "Objects" are objects that fall in any of the above classes
 
@@ -123,34 +124,36 @@ For processors and touch panels, pass in their `Device Alias` as setup in your s
 
 All other objects are referenced by their names that are set in GUI designer.
 
-#### Most functions are derived from Extron Class methods.
+#### Most functions are derived from Extron Class methods
 
-For example, the `label` class has a method called `SetText`.  You would call `SetText` as the function in the API.
+For example, the `Label` class has a method called `SetText`.  You would call `SetText` as the function in the API.
 
 #### Additional functions which have been added
 
-- `GetProperty` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron ControlScript® documentation.
+*Hint: Built-in ECS functionality uses the same `PascalCase` as written by Extron.  Additional methods, macros or classes added in this project use `snake_case`.*
 
-- `GetProperty` can return values from the internal page/popup state machine
+- `get_property` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron ControlScript® documentation.
 
-    State Machine Objects: 
+- `get_property` can return values from the internal page/popup state machine
 
-     - `PageState1` for ui_device 1, `PageState2` for ui_device 2, up to 4 total ui_devices.
+    State Machine Objects:
+
+  - `page_state_1` for ui_device 1, `page_state_2` for ui_device 2, up to 4 total ui_devices.
 
     PageState Attributes:
-    - `ui_device`: returns the ui_device object attached to the state machine
-    - `current_page`
-    - `current_popup`
-    - `all_pages_called` , all pages called since boot
-    - `all_popups_called`, all popups and modals called since boot
+  - `ui_device`: returns the ui_device object attached to the state machine
+  - `current_page`
+  - `current_popup`
+  - `all_pages_called` , all pages called since boot
+  - `all_popups_called`, all popups and modals called since boot
 
     Example to return the current page of the first UI Device:
 
     ```JSON
     {
         "type": "page_state",
-        "object": "PageState1",
-        "function": "GetProperty",
+        "object": "page_state_1",
+        "function": "get_property",
         "arg1": "current_page"
     }
     ```
@@ -169,20 +172,26 @@ To set a button called `Btn_Power` to a state of `1`, you would use the followin
 
 ```JSON
 {
-    "type": "button",
+    "type": "Button",
     "object": "Btn_Power",
     "function": "SetState",
     "arg1": "1"
 }
 ```
 
+(Here's a example of how you can use `curl` in Bash or PowerShell for this command)
+
+```pwsh
+curl --http0.9 -X POST --data '{"type": "Button", "object": "Btn_Power", "arg1": "1"}' http://192.168.253.254:8081
+```
+
 To get the state of that same button:
 
 ```JSON
 {
-    "type": "button",
+    "type": "Button",
     "object": "Btn_Power",
-    "function": "GetProperty",
+    "function": "get_property",
     "arg1": "State"
 }
 ```
@@ -191,7 +200,7 @@ To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg
 
 ```JSON
 {
-    "type": "ui_device",
+    "type": "UIDevice",
     "object": "TouchPanel_1",
     "function": "ShowPopup",
     "arg1": "Popup1",
@@ -204,7 +213,7 @@ In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the
 
 ```JSON
 {
-    "type": "button",
+    "type": "Button",
     "object": "Btn_1",
     "function": "SetBlinking",
     "arg1": "Medium",
@@ -240,7 +249,6 @@ Example:
 
 The processor will then wait for an immidate reply, which could be instructions to set that same button to a state of `0` so the user has immidate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
 
-
 ## Known Issues
 
 - Calling "ShowPopup" with an invalid popup name will not return an error  This may be a limitation of extronlib.  As a result, the page state machine will be wrong and the touch panel may not be in the desired state.  The error is written to the program log though.  Workaround: check the program log for errors and make sure you're calling valid popup names.
@@ -270,6 +278,78 @@ A: The backend server i'm writing intends to use Go Microservices from <https://
 Q: What about devices on AVLAN or devices that the backend server can't reach?
 
 A: Those are supported the same as serial devices and relays.  Technically you can use the processor as a proxy to all ethernet devices but it's recommended that the backend server handles as many devices that it can communicate with directly.
+
+### AVLAN Device Control over SSH Example
+
+The below is an example of how to control devices that are connected to a processors isolated AVLAN network.  This example is similar to how you would use serial devices connected to the processor as well.
+
+First, instantiate your devices in `src/hardware/ethernet.py` like such:
+
+```py
+# src/hardware/ethernet.py
+from extronlib.interface import EthernetClientInterface
+
+all_ethernet_interfaces = [
+    EthernetClientInterface(
+        Hostname='test-IN1804', 
+        IPPort=22023, 
+        Protocol='SSH', 
+        Credentials=('admin', 'your_password')
+    ),
+]
+```
+
+Then we'll need to connect to the device.  If you are connecting to an Extron device the authentication should be handled in the background for you upon sending the `Connect` command.
+
+```json
+{
+    "type": "EthernetClientInterface",
+    "object": "test-IN1804",
+    "function": "Connect",
+}
+```
+
+Optionally, if you would like to keep the connection alive, you can use `StartKeepAlive` where `arg1` is the keepalive interval and `arg2` is the data to send.  For example, we'll query the firmware version every 5 seconds as our keepalive.  
+
+```json
+{
+    "type": "EthernetClientInterface",
+    "object": "test-IN1804",
+    "function": "StartKeepAlive",
+    "arg1": "5",
+    "arg2": "Q\n"
+}
+```
+
+After we're connected, we can start sending commands.  We'll use the `SendAndWait` method to change the input of the 1804 to input 2.  `arg1` is the data to send and `arg2` is the timeout period.
+
+```json
+{
+    "type": "EthernetClientInterface",
+    "object": "test-IN1804",
+    "function": "SendAndWait",
+    "arg1": "2!\n",
+    "arg2": "1"
+}
+```
+
+If you're having issues, make sure your connection was successfull and you are using the correct hostname.  You can check that by looking at all elements.
+
+```json
+{
+    "type": "get_all_elements"
+}
+```
+
+That will return the connection information under `all_ethernet_interfaces` like such (our hostname is "test-1804"):
+
+```json
+{
+    ...<other data>
+    "all_ethernet_interfaces": "{'test-1804': EthernetClient test-1804:22023 - :SSH Connected}",
+    ...
+}
+```
 
 ### Disclaimer
 
