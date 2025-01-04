@@ -10,7 +10,7 @@ This project can be used to entirely replace the 'backend' (logic, device handli
 
 Physical ports such as relays, serial ports and devices on a processors AVLAN are also supported.
 
-Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` or software like `Postman` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
+Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
 
 ## Reason
 
@@ -100,7 +100,7 @@ The RPC API is structured as such:
 
 For simplicity sake **all JSON values are strings**.  The API will type convert appropriately.
 
-Due to limitations in the built-in server library, the RPC api runs `HTTP 0.9`
+Due to limitations in the built-in server library, the RPC api runs `HTTP 0.9`.  Unfortunately that means that the current version of Postman will not work for API testing.
 
 The API has been made to mirror existing methods as close as possible.  The paramaters in the form of `arg1`, `arg2`, `arg3` are simply paramaters that need to be passed to the control script function.   The `ControlScript® Documentation` document provided by Extron will prove helpful in determing how to use the RPC API.
 
@@ -177,6 +177,12 @@ To set a button called `Btn_Power` to a state of `1`, you would use the followin
     "function": "SetState",
     "arg1": "1"
 }
+```
+
+(Here's a example of how you can use `curl` in Bash or PowerShell for this command)
+
+```pwsh
+curl --http0.9 -X POST --data '{"type": "Button", "object": "Btn_Power", "arg1": "1"}' http://192.168.253.254:8081
 ```
 
 To get the state of that same button:
