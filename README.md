@@ -12,6 +12,7 @@ Physical ports such as relays, serial ports and devices on a processors AVLAN ar
 
 Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
 
+
 ## Reason
 
 Use modern Python, Go, Rust, C#, Java, Javascript, NodeRed or basically any modern language as a backend and extend the useful life and capibility of your hardware.
@@ -39,7 +40,7 @@ Deployment is mostly unchanged from the normal process, but please pay attention
 
 2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server coniguration.
 
-3. Instantiate your hardware into the existing lists using the Device Aliases from step 1 into the `src/hardware/hardware.py` file.
+3. Instantiate your hardware into the existing lists using the Device Aliases from step 1 into the `src/hardware/hardware.py` file.  *Coming Soon: Full JSON instantiation and GUI helper tool to further reduce the amount of time you need to "deploy" a system.*
 
 Example
 
@@ -100,7 +101,7 @@ The RPC API is structured as such:
 
 For simplicity sake **all JSON values are strings**.  The API will type convert appropriately.
 
-Due to limitations in the built-in server library, the RPC api runs `HTTP 0.9`.  Unfortunately that means that the current version of Postman will not work for API testing.
+Due to limitations in the built-in server library, the RPC API runs `HTTP 0.9`.  Unfortunately that means that the current version of Postman will not work for API testing.
 
 The API has been made to mirror existing methods as close as possible.  The paramaters in the form of `arg1`, `arg2`, `arg3` are simply paramaters that need to be passed to the control script function.   The `ControlScript® Documentation` document provided by Extron will prove helpful in determing how to use the RPC API.
 
@@ -253,6 +254,8 @@ The processor will then wait for an immidate reply, which could be instructions 
 
 - Calling "ShowPopup" with an invalid popup name will not return an error  This may be a limitation of extronlib.  As a result, the page state machine will be wrong and the touch panel may not be in the desired state.  The error is written to the program log though.  Workaround: check the program log for errors and make sure you're calling valid popup names.
 
+- All other issues and the roadmap for future releases is in the Github issue tracker.
+
 ## FAQ
 
 Q: Wouldn't the GUI update slower vs writing the logic on the local processor since it has to contact an external server over the network then wait for a reply?
@@ -284,6 +287,7 @@ A: Those are supported the same as serial devices and relays.  Technically you c
 The below is an example of how to control devices that are connected to a processors isolated AVLAN network.  This example is similar to how you would use serial devices connected to the processor as well.
 
 First, instantiate your devices in `src/hardware/ethernet.py` like such:
+(*Coming Soon: Simply enter the info into a GUI tool and the rest will be done for you*)
 
 ```py
 # src/hardware/ethernet.py
@@ -333,7 +337,7 @@ After we're connected, we can start sending commands.  We'll use the `SendAndWai
 }
 ```
 
-If you're having issues, make sure your connection was successfull and you are using the correct hostname.  You can check that by looking at all elements.
+If you're having issues, make sure your connection was successfull and you are using the correct hostname (If you used an IP, the "Hostname" is the IP address without the port number).  You can check that by looking at all elements.
 
 ```json
 {
