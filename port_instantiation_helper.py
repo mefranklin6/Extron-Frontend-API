@@ -1,6 +1,9 @@
 import json
+import os
 import tkinter as tk
 from tkinter import messagebox, ttk
+
+import paramiko
 
 """
 Helper tool to generate JSON for port instantiation (Serial, Relay, Ethernet)
@@ -14,6 +17,11 @@ class PortInstantiationApp:
 
         self.host_classes = ["ProcessorDevice", "eBUSDevice"]
         self.host_options = self.find_existing_hosts()
+
+        self.json_cache = []
+        self.processor_address = ""
+        self.processor_password = ""
+        self.sftp_port = 22022
 
         self.root = root
         self.root.title("Port Instantiation Helper")
@@ -130,17 +138,99 @@ class PortInstantiationApp:
             radio.pack(side="left")
 
         generate_button = ttk.Button(
-            self.serial_frame, text="Generate JSON", command=self.generate_serial_json
+            self.serial_frame,
+            text="Generate and Add",
+            command=self.generate_serial_json,
         )
         generate_button.pack(pady=10)
 
+        preview_button = ttk.Button(
+            self.serial_frame, text="Preview Export", command=self.show_preview
+        )
+        preview_button.pack(pady=10)
+
+        export_button = ttk.Button(
+            self.serial_frame, text="Export JSON", command=self.export_prompt
+        )
+        export_button.pack(pady=10)
+
     def generate_serial_json(self):
+        self.serial_entries["Port"].delete(0, tk.END)
         data = {field: entry.get() for field, entry in self.serial_entries.items()}
+        data["Class"] = "SerialInterface"
         data["Parity"] = self.parity_var.get()
         data["FlowControl"] = self.flowcontrol_var.get()
         data["Mode"] = self.mode_var.get()
-        json_data = json.dumps(data, indent=4)
-        self.show_json(json_data)
+        self.json_cache.append(data)
+
+    def show_preview(self):
+        preview_window = tk.Toplevel(self.root)
+        preview_window.title("JSON Cache Preview")
+        text = tk.Text(preview_window, wrap="word")
+        json_data = json.dumps(self.json_cache, indent=4)
+        text.insert("1.0", json_data)
+        text.pack(expand=True, fill="both")
+        text.config(state="disabled")
+
+    def export(self):
+        # Convert the JSON cache to a JSON string
+        json_data = json.dumps(self.json_cache, indent=4)
+
+        hostname = self.processor_address
+        port = self.sftp_port
+        username = "admin"
+        password = self.processor_password
+
+        # Create an SFTP client
+        transport = paramiko.Transport((hostname, port))
+        try:
+            transport.connect(username=username, password=password)
+            sftp = paramiko.SFTPClient.from_transport(transport)
+
+            # Define the remote file path
+            remote_file_path = "/instantiation.json"
+
+            # Write the JSON data to a temporary local file
+            with open("temp_file.json", "w") as temp_file:
+                temp_file.write(json_data)
+
+            # Upload the temporary file to the remote server
+            sftp.put("temp_file.json", remote_file_path)
+
+            # Remove the temporary local file
+            os.remove("temp_file.json")
+
+            print("Export successful")
+        except Exception as e:
+            print(f"Export failed: {e}")
+        finally:
+            transport.close()
+            exit()
+
+    def export_prompt(self):
+        processor_info_window = tk.Toplevel(self.root)
+        processor_info_window.title("Enter Processor Information")
+
+        address_label = ttk.Label(processor_info_window, text="Processor Address:")
+        address_label.pack(pady=10)
+        address_entry = ttk.Entry(processor_info_window)
+        address_entry.pack(pady=10)
+
+        password_label = ttk.Label(processor_info_window, text="Admin Password:")
+        password_label.pack(pady=10)
+        password_entry = ttk.Entry(processor_info_window)
+        password_entry.pack(pady=10)
+
+        def on_submit():
+            self.processor_address = address_entry.get()
+            self.processor_password = password_entry.get()
+            processor_info_window.destroy()
+            self.export()
+
+        submit_button = ttk.Button(
+            processor_info_window, text="Submit", command=on_submit
+        )
+        submit_button.pack(pady=10)
 
     def create_ethernet_interface(self):
         struct = {
@@ -241,13 +331,9 @@ class PortInstantiationApp:
         )
         generate_button.pack(pady=10)
 
-    def generate_serial_json(self):
-        data = {field: entry.get() for field, entry in self.serial_entries.items()}
-        json_data = json.dumps(data, indent=4)
-        self.show_json(json_data)
-
     def generate_ethernet_json(self):
         data = {field: entry.get() for field, entry in self.ethernet_entries.items()}
+        data["Class"] = "EthernetClientInterface"
         protocol = self.protocol_var.get()
         data["Protocol"] = protocol
 
@@ -266,20 +352,11 @@ class PortInstantiationApp:
             data.pop(pop_item)
 
         json_data = json.dumps(data, indent=4)
-        self.show_json(json_data)
 
     def generate_relay_json(self):
         data = {field: entry.get() for field, entry in self.relay_entries.items()}
+        data["Class"] = "RelayInterface"
         json_data = json.dumps(data, indent=4)
-        self.show_json(json_data)
-
-    def show_json(self, json_data):
-        json_window = tk.Toplevel(self.root)
-        json_window.title("Generated JSON")
-        text = tk.Text(json_window, wrap="word")
-        text.insert("1.0", json_data)
-        text.pack(expand=True, fill="both")
-        text.config(state="disabled")
 
 
 if __name__ == "__main__":
