@@ -155,13 +155,19 @@ class PortInstantiationApp:
         export_button.pack(pady=10)
 
     def generate_serial_json(self):
-        self.serial_entries["Port"].delete(0, tk.END)
         data = {field: entry.get() for field, entry in self.serial_entries.items()}
+        if data["Port"] == "":
+            messagebox.showerror("Error", "Port cannot be empty.")
+            return
+        elif "COM" not in data["Port"]:
+            messagebox.showerror("Error", "Malformed Serial Port: must start with 'COM'.")
+            return
         data["Class"] = "SerialInterface"
         data["Parity"] = self.parity_var.get()
         data["FlowControl"] = self.flowcontrol_var.get()
         data["Mode"] = self.mode_var.get()
         self.json_cache.append(data)
+        self.serial_entries["Port"].delete(0, tk.END)
 
     def show_preview(self):
         preview_window = tk.Toplevel(self.root)
@@ -355,6 +361,11 @@ class PortInstantiationApp:
 
     def generate_ethernet_json(self):
         data = {field: entry.get() for field, entry in self.ethernet_entries.items()}
+        
+        if data["Hostname"] == "":
+            messagebox.showerror("Error", "Hostname cannot be empty.")
+            return
+        
         data["Class"] = "EthernetClientInterface"
         protocol = self.protocol_var.get()
         data["Protocol"] = protocol
@@ -379,6 +390,12 @@ class PortInstantiationApp:
 
     def generate_relay_json(self):
         data = {field: entry.get() for field, entry in self.relay_entries.items()}
+        if data["Port"] == "":
+            messagebox.showerror("Error", "Port cannot be empty.")
+            return
+        elif "RLY" not in data["Port"]:
+            messagebox.showerror("Error", "Malformed Relay Port: must start with 'RLY'.")
+            return
         data["Class"] = "RelayInterface"
         self.json_cache.append(data)
         self.relay_entries["Port"].delete(0, tk.END)
