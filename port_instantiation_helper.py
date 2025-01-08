@@ -160,7 +160,9 @@ class PortInstantiationApp:
             messagebox.showerror("Error", "Port cannot be empty.")
             return
         elif "COM" not in data["Port"]:
-            messagebox.showerror("Error", "Malformed Serial Port: must start with 'COM'.")
+            messagebox.showerror(
+                "Error", "Malformed Serial Port: must start with 'COM'."
+            )
             return
         data["Class"] = "SerialInterface"
         data["Parity"] = self.parity_var.get()
@@ -179,39 +181,66 @@ class PortInstantiationApp:
         text.config(state="disabled")
 
     def export(self):
-        # Convert the JSON cache to a JSON string
         json_data = json.dumps(self.json_cache, indent=4)
 
         hostname = self.processor_address
         port = self.sftp_port
         username = "admin"
         password = self.processor_password
+        remote_file_path = "/ports.json"
 
-        # Create an SFTP client
-        transport = paramiko.Transport((hostname, port))
         try:
+            transport = paramiko.Transport((hostname, port))
             transport.connect(username=username, password=password)
             sftp = paramiko.SFTPClient.from_transport(transport)
 
-            # Define the remote file path
-            remote_file_path = "/instantiation.json"
+            # Check if the file already exists
+            try:
+                sftp.stat(remote_file_path)
+                file_exists = True
+            except FileNotFoundError:
+                file_exists = False
 
-            # Write the JSON data to a temporary local file
-            with open("temp_file.json", "w") as temp_file:
-                temp_file.write(json_data)
+            if not file_exists:
+                with sftp.file(remote_file_path, "w") as remote_file:
+                    remote_file.write(json_data)
 
-            # Upload the temporary file to the remote server
-            sftp.put("temp_file.json", remote_file_path)
+            if file_exists:
+                action = messagebox.askyesnocancel(
+                    "File Exists",
+                    f"The file {remote_file_path} already exists. Do you want to overwrite it? (Yes to overwrite, No to append, Cancel to abort)",
+                )
+                if action is None:
+                    transport.close()
+                    return
+                elif action:
+                    # Overwrite the file
+                    with sftp.file(remote_file_path, "w") as remote_file:
+                        remote_file.write(json_data)
+                else:
+                    # Append to the file
+                    with sftp.file(remote_file_path, "r") as remote_file:
+                        existing_data = json.load(remote_file)
 
-            # Remove the temporary local file
-            os.remove("temp_file.json")
+                    # Merge the existing data with the new data
+                    if isinstance(existing_data, list):
+                        existing_data.extend(self.json_cache)
+                    elif isinstance(existing_data, dict):
+                        existing_data.update(self.json_cache)
+                    else:
+                        raise ValueError("Unsupported JSON format for appending")
+
+                    with sftp.file(remote_file_path, "w") as remote_file:
+                        remote_file.write(json.dumps(existing_data, indent=4))
 
             print("Export successful")
+            transport.close()
+            exit(0)
         except Exception as e:
             print(f"Export failed: {e}")
+            messagebox.showerror("Error", f"Export failed: {e}")
         finally:
             transport.close()
-            exit()
 
     def export_prompt(self):
         processor_info_window = tk.Toplevel(self.root)
@@ -361,11 +390,11 @@ class PortInstantiationApp:
 
     def generate_ethernet_json(self):
         data = {field: entry.get() for field, entry in self.ethernet_entries.items()}
-        
+
         if data["Hostname"] == "":
             messagebox.showerror("Error", "Hostname cannot be empty.")
             return
-        
+
         data["Class"] = "EthernetClientInterface"
         protocol = self.protocol_var.get()
         data["Protocol"] = protocol
@@ -394,7 +423,9 @@ class PortInstantiationApp:
             messagebox.showerror("Error", "Port cannot be empty.")
             return
         elif "RLY" not in data["Port"]:
-            messagebox.showerror("Error", "Malformed Relay Port: must start with 'RLY'.")
+            messagebox.showerror(
+                "Error", "Malformed Relay Port: must start with 'RLY'."
+            )
             return
         data["Class"] = "RelayInterface"
         self.json_cache.append(data)
