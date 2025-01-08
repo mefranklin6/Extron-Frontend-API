@@ -150,7 +150,7 @@ class PortInstantiationApp:
         preview_button.pack(pady=10)
 
         export_button = ttk.Button(
-            self.serial_frame, text="Export JSON", command=self.export_prompt
+            self.serial_frame, text="Export over SFTP", command=self.export_prompt
         )
         export_button.pack(pady=10)
 
@@ -268,14 +268,24 @@ class PortInstantiationApp:
                 entry.pack()
                 self.ethernet_entries[field] = entry
 
+        self.update_ethernet_fields()
+
         generate_button = ttk.Button(
             self.ethernet_frame,
-            text="Generate JSON",
+            text="Generate and Add",
             command=self.generate_ethernet_json,
         )
         generate_button.pack(pady=10)
 
-        self.update_ethernet_fields()
+        preview_button = ttk.Button(
+            self.ethernet_frame, text="Preview Export", command=self.show_preview
+        )
+        preview_button.pack(pady=10)
+
+        export_button = ttk.Button(
+            self.ethernet_frame, text="Export over SFTP", command=self.export_prompt
+        )
+        export_button.pack(pady=10)
 
     def update_ethernet_fields(self):
         protocol = self.protocol_var.get()
@@ -326,10 +336,22 @@ class PortInstantiationApp:
             entry.pack()
             self.relay_entries[field] = entry
 
-        generate_button = ttk.Button(
-            self.relay_frame, text="Generate JSON", command=self.generate_relay_json
-        )
+            generate_button = ttk.Button(
+                self.relay_frame,
+                text="Generate and Add",
+                command=self.generate_relay_json,
+            )
         generate_button.pack(pady=10)
+
+        preview_button = ttk.Button(
+            self.relay_frame, text="Preview Export", command=self.show_preview
+        )
+        preview_button.pack(pady=10)
+
+        export_button = ttk.Button(
+            self.relay_frame, text="Export over SFTP", command=self.export_prompt
+        )
+        export_button.pack(pady=10)
 
     def generate_ethernet_json(self):
         data = {field: entry.get() for field, entry in self.ethernet_entries.items()}
@@ -351,12 +373,15 @@ class PortInstantiationApp:
         for pop_item in pop_list:
             data.pop(pop_item)
 
-        json_data = json.dumps(data, indent=4)
+        self.json_cache.append(data)
+
+        self.ethernet_entries["Hostname"].delete(0, tk.END)
 
     def generate_relay_json(self):
         data = {field: entry.get() for field, entry in self.relay_entries.items()}
         data["Class"] = "RelayInterface"
-        json_data = json.dumps(data, indent=4)
+        self.json_cache.append(data)
+        self.relay_entries["Host"].delete(0, tk.END)
 
 
 if __name__ == "__main__":
