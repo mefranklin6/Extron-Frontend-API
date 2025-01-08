@@ -381,7 +381,7 @@ class PortInstantiationApp:
         data = {field: entry.get() for field, entry in self.relay_entries.items()}
         data["Class"] = "RelayInterface"
         self.json_cache.append(data)
-        self.relay_entries["Host"].delete(0, tk.END)
+        self.relay_entries["Port"].delete(0, tk.END)
 
 
 if __name__ == "__main__":
