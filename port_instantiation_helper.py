@@ -154,23 +154,6 @@ class PortInstantiationApp:
         )
         export_button.pack(pady=10)
 
-    def generate_serial_json(self):
-        data = {field: entry.get() for field, entry in self.serial_entries.items()}
-        if data["Port"] == "":
-            messagebox.showerror("Error", "Port cannot be empty.")
-            return
-        elif "COM" not in data["Port"]:
-            messagebox.showerror(
-                "Error", "Malformed Serial Port: must start with 'COM'."
-            )
-            return
-        data["Class"] = "SerialInterface"
-        data["Parity"] = self.parity_var.get()
-        data["FlowControl"] = self.flowcontrol_var.get()
-        data["Mode"] = self.mode_var.get()
-        self.json_cache.append(data)
-        self.serial_entries["Port"].delete(0, tk.END)
-
     def show_preview(self):
         preview_window = tk.Toplevel(self.root)
         preview_window.title("JSON Cache Preview")
@@ -236,8 +219,13 @@ class PortInstantiationApp:
             print("Export successful")
             transport.close()
             exit(0)
+        except ImportError as e:
+            messagebox.showerror(
+                "Missing Dependency",
+                "Package 'paramiko' must be installed for SFTP.  Please `pip install paramiko`",
+            )
         except Exception as e:
-            print(f"Export failed: {e}")
+            print("Export failed!")
             messagebox.showerror("Error", f"Export failed: {e}")
         finally:
             transport.close()
@@ -387,6 +375,23 @@ class PortInstantiationApp:
             self.relay_frame, text="Export over SFTP", command=self.export_prompt
         )
         export_button.pack(pady=10)
+
+    def generate_serial_json(self):
+        data = {field: entry.get() for field, entry in self.serial_entries.items()}
+        if data["Port"] == "":
+            messagebox.showerror("Error", "Port cannot be empty.")
+            return
+        elif "COM" not in data["Port"]:
+            messagebox.showerror(
+                "Error", "Malformed Serial Port: must start with 'COM'."
+            )
+            return
+        data["Class"] = "SerialInterface"
+        data["Parity"] = self.parity_var.get()
+        data["FlowControl"] = self.flowcontrol_var.get()
+        data["Mode"] = self.mode_var.get()
+        self.json_cache.append(data)
+        self.serial_entries["Port"].delete(0, tk.END)
 
     def generate_ethernet_json(self):
         data = {field: entry.get() for field, entry in self.ethernet_entries.items()}
