@@ -231,6 +231,11 @@ class PortInstantiationApp:
             transport.close()
 
     def export_prompt(self):
+
+        if self.json_cache == []:
+            messagebox.showerror("Error", "No data to export.")
+            return
+
         processor_info_window = tk.Toplevel(self.root)
         processor_info_window.title("Enter Processor Information")
 
@@ -241,7 +246,7 @@ class PortInstantiationApp:
 
         password_label = ttk.Label(processor_info_window, text="Admin Password:")
         password_label.pack(pady=10)
-        password_entry = ttk.Entry(processor_info_window)
+        password_entry = ttk.Entry(processor_info_window, show="*")
         password_entry.pack(pady=10)
 
         def on_submit():
