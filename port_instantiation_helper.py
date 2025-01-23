@@ -1,9 +1,6 @@
 import json
-import os
 import tkinter as tk
 from tkinter import messagebox, ttk
-
-import paramiko
 
 """
 Helper tool to generate JSON for port instantiation (Serial, Relay, Ethernet)
@@ -22,6 +19,15 @@ class PortInstantiationApp:
         self.processor_address = ""
         self.processor_password = ""
         self.sftp_port = 22022
+        self.sftp_export_available = False
+
+        try:
+            import paramiko
+
+            self.paramiko = paramiko
+            self.sftp_export_available = True
+        except ImportError as e:
+            print(e)
 
         self.root = root
         self.root.title("Port Instantiation Helper")
@@ -173,9 +179,9 @@ class PortInstantiationApp:
         remote_file_path = "/ports.json"
 
         try:
-            transport = paramiko.Transport((hostname, port))
+            transport = self.paramiko.Transport((hostname, port))
             transport.connect(username=username, password=password)
-            sftp = paramiko.SFTPClient.from_transport(transport)
+            sftp = self.paramiko.SFTPClient.from_transport(transport)
 
             # Check if the file already exists
             try:
@@ -219,18 +225,31 @@ class PortInstantiationApp:
             print("Export successful")
             transport.close()
             exit(0)
-        except ImportError as e:
-            messagebox.showerror(
-                "Missing Dependency",
-                "Package 'paramiko' must be installed for SFTP.  Please `pip install paramiko`",
-            )
         except Exception as e:
             print("Export failed!")
-            messagebox.showerror("Error", f"Export failed: {e}")
+            messagebox.showerror(
+                "Error",
+                f"""Export failed: {e}
+
+You can still copy-paste your data from the "Show Preview" button
+""",
+            )
         finally:
             transport.close()
 
     def export_prompt(self):
+        if not self.sftp_export_available:
+            messagebox.showerror(
+                "No SFTP Client",
+                """Missing required library "paramiko".
+SFTP Export is diabled for this session.
+
+Please copy and paste manually from the "Preview Export" button
+
+To fix this error, please `pip install paramiko`
+""",
+            )
+            return
 
         if self.json_cache == []:
             messagebox.showerror("Error", "No data to export.")
@@ -383,10 +402,7 @@ class PortInstantiationApp:
 
     def generate_serial_json(self):
         data = {field: entry.get() for field, entry in self.serial_entries.items()}
-        if data["Port"] == "":
-            messagebox.showerror("Error", "Port cannot be empty.")
-            return
-        elif "COM" not in data["Port"]:
+        if not data["Port"].startswith("COM"):
             messagebox.showerror(
                 "Error", "Malformed Serial Port: must start with 'COM'."
             )
@@ -419,6 +435,9 @@ class PortInstantiationApp:
             pop_list = udp_pop
         elif protocol == "SSH":
             pop_list = ssh_pop
+            if data["Username"] == "" or data["Password"] == "":
+                messagebox.showerror("Error", "Missing Credentials for SSH")
+                return
 
         for pop_item in pop_list:
             data.pop(pop_item)
@@ -429,10 +448,7 @@ class PortInstantiationApp:
 
     def generate_relay_json(self):
         data = {field: entry.get() for field, entry in self.relay_entries.items()}
-        if data["Port"] == "":
-            messagebox.showerror("Error", "Port cannot be empty.")
-            return
-        elif "RLY" not in data["Port"]:
+        if not data["Port"].startswith("RLY"):
             messagebox.showerror(
                 "Error", "Malformed Relay Port: must start with 'RLY'."
             )
