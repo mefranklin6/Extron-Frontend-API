@@ -756,6 +756,8 @@ def handle_unsolicited_rpc_rx(client, data):
         if body:
             # log(str(body), "info")
             process_rx_data_and_send_reply(body, client)
+            if "User-Agent: curl" in data_str:
+                client.Disconnect() # curl expects a disconnect after a response
         else:
             log("No data received", "error")
     except json.JSONDecodeError as e:
