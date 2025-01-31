@@ -85,7 +85,7 @@ all_buttons = [
 ![port_instantiation_helper](https://github.com/user-attachments/assets/95d95af2-ee8a-464a-865d-f18902125bee)
 
 
-5. Deploy as normal using CSDU.  Re-deploy if you update your GUI Designer File or if you change hardware.
+6. Deploy as normal using CSDU.  Re-deploy if you update your GUI Designer File or if you change hardware.
 
 ## Architecture
 
@@ -269,7 +269,7 @@ A: Unless your network is awfuly slow, the user will not notice.  You have to re
 
 Q: What if the backend server goes down or the processor loses connectivity to it?
 
-A: Well then the system breaks and the touch panel will appear 'frozen'.  The good news is that it's not too hard to implement high availability and server failover.  That functionality will be coming to this project soon.  Until then, you can still setup email alerts.
+A: Well then the system breaks and the touch panel will appear 'frozen'.  This project comes with a primary and secondary backend server configuration and ability to specify a custom address out of the box, but you can implement your own failover and high-availability architecture as it best fits your needs.
 
 Q: Will Extron support this?
 
@@ -277,7 +277,7 @@ A: Probably not.  Please do not contact their support for help, I'm hoping this 
 
 Q: Will you post an example of a backend server?
 
-A: Yes.  As of now I only have a basic proof of concept written in Go.  Unlike this project that will work for most everyone, the backend server will be custom to your logic and your GUI.
+A: Yes, see the link at the top of this readme.
 
 Q: What about device drivers and modules?
 
@@ -291,21 +291,18 @@ A: Those are supported the same as serial devices and relays.  Technically you c
 
 The below is an example of how to control devices that are connected to a processors isolated AVLAN network.  This example is similar to how you would use serial devices connected to the processor as well.
 
-First, instantiate your devices in `src/hardware/ethernet.py` like such:
-(*Coming Soon: Simply enter the info into a GUI tool and the rest will be done for you*)
+First, instantiate your devices by using `port_instantiation_helper.py` on a PC.  (The below JSON from our test device is exported from the helper script to the processor as shown below.  The processor will then read and instantiate these devices for us)
 
-```py
-# src/hardware/ethernet.py
-from extronlib.interface import EthernetClientInterface
-
-all_ethernet_interfaces = [
-    EthernetClientInterface(
-        Hostname='test-IN1804', 
-        IPPort=22023, 
-        Protocol='SSH', 
-        Credentials=('admin', 'your_password')
-    ),
-]
+```json
+# port_instantiation_helper.py creates this JSON and exports it to the processor as `/ports.json`
+{
+    "Hostname": "test-IN1804",
+    "IPPort": "22023",
+    "Username": "admin",
+    "Password": "your_password",
+    "Class": "EthernetClientInterface",
+    "Protocol": "SSH"
+}
 ```
 
 Then we'll need to connect to the device.  If you are connecting to an Extron device the authentication should be handled in the background for you upon sending the `Connect` command.
