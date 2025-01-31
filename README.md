@@ -188,7 +188,7 @@ To set a button called `Btn_Power` to a state of `1`, you would use the followin
 (Here's a example of how you can use `curl` in Bash or PowerShell for this command)
 
 ```pwsh
-curl --http0.9 -X POST --data '{"type": "Button", "object": "Btn_Power", "arg1": "1"}' http://192.168.253.254:8081
+curl --http0.9 -X POST --data '{"type": "Button", "object": "Btn_Power", "function": "SetState", "arg1": "1"}' http://192.168.253.254:8081
 ```
 
 To get the state of that same button:
