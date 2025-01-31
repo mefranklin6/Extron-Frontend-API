@@ -81,6 +81,10 @@ all_buttons = [
 
 5. If you need to use any relay, serial, or AVLAN devices, run `port_instantiation_helper.py` on a PC.  This provides you with a graphical interface and an easy way to add devices and export the resulting JSON file.
 
+
+![port_instantiation_helper](https://github.com/user-attachments/assets/95d95af2-ee8a-464a-865d-f18902125bee)
+
+
 5. Deploy as normal using CSDU.  Re-deploy if you update your GUI Designer File or if you change hardware.
 
 ## Architecture
