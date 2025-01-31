@@ -25,10 +25,9 @@ Anything that can run Extron ControlScript®.  You'll need someone who holds the
 
 ## Current State
 
-IMPORTANT: Branch `Alpha` is the first release.
-Currently the majority of GUI functions are supported for all GUI types, relay control, and basic serial port control passthrough.  Multiple touch panels and multiple processors are supported.  This should be enough to get most projects converted but more functionality is coming.
+IMPORTANT: Branch `Beta` is the latest stable release and is essentially feature-complete, as in it is ready to start converting the vast majority of projects. If you find something that you need missing you can submit an issue or send a pull request.
 
-Branch `main` is the current beta development branch and may not be 100% stable at all times.  You can find features to be implemented and a milestone for the Beta release in Github Issues.  
+Branch `main` is the current beta development branch and may not be 100% stable at all times.  You can find features to be implemented and a milestone for the 1.0 release in Github Issues.  
 
 I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
 
@@ -40,8 +39,7 @@ Deployment is mostly unchanged from the normal process, but please pay attention
 
 2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server coniguration.
 
-3. Instantiate your hardware into the existing lists using the Device Aliases from step 1 into the `src/hardware/hardware.py` file.  *Coming Soon: Full JSON instantiation and GUI helper tool to further reduce the amount of time you need to "deploy" a system.*
-
+3. Instantiate your hardware into the existing lists using the Device Aliases from step 1 into the `src/hardware/hardware.py` file.
 Example
 
 ```Python
@@ -58,7 +56,7 @@ all_processors = [
 ]
  ```
 
-4. Instantiate your GUI elements into the existing lists in their respective files in the `gui_elements` folder.  Use the names that are assigned to these elements in your GUI Designer file.  Do the same for any hardware ports you need in `hardware`.
+4. Instantiate your GUI elements into the existing lists in their respective files in the `gui_elements` folder.  Use the names that are assigned to these elements in your GUI Designer file.
 
 Example
 
@@ -79,6 +77,9 @@ all_buttons = [
 ```
 
 > **Note:** If you are converting an existing project, you can use the included `gui_element_instantiation_converter.py` script to automatically populate the above lists from your old files.
+
+
+5. If you need to use any relay, serial, or AVLAN devices, run `port_instantiation_helper.py` on a PC.  This provides you with a graphical interface and an easy way to add devices and export the resulting JSON file.
 
 5. Deploy as normal using CSDU.  Re-deploy if you update your GUI Designer File or if you change hardware.
 
