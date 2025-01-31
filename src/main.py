@@ -115,7 +115,6 @@ class PortInstantiation:
         if not self.port_definitions:
             return
         for port_definition in self.port_definitions:
-            log("Port Definition: {}".format(port_definition), "info")
             port_class = port_definition["Class"]
             if port_class == "RelayInterface":
                 self.instantiate_relays(port_definition)
@@ -127,12 +126,28 @@ class PortInstantiation:
                 log("Unknown Port Definition Class: {}".format(port_class), "error")
 
     def instantiate_relays(self, port_definition):
-        host = port_definition["Host"]
+        host = PROCESSORS_MAP.get(port_definition["Host"], None)
+        if not host:
+            log(
+                "Host Processor for relay port not found: {}".format(
+                    port_definition["Host"]
+                ),
+                "error",
+            )
+            return
         port = port_definition["Port"]
-        self.all_relays.append(RelayInterface(PROCESSORS_MAP[host], port))
+        self.all_relays.append(RelayInterface(host, port))
 
     def instantiate_serial_interface(self, port_definition):
-        host = port_definition["Host"]
+        host = PROCESSORS_MAP.get(port_definition["Host"], None)
+        if not host:
+            log(
+                "Host Processor for relay port not found: {}".format(
+                    port_definition["Host"]
+                ),
+                "error",
+            )
+            return
         port = port_definition["Port"]
         baud = int(port_definition["Baud"])
         data = int(port_definition["Data"])
@@ -143,7 +158,7 @@ class PortInstantiation:
         mode = port_definition["Mode"]
         self.all_serial_interfaces.append(
             SerialInterface(
-                PROCESSORS_MAP[host],
+                host,
                 port,
                 Baud=baud,
                 Data=data,
@@ -647,7 +662,7 @@ def process_rx_data_and_send_reply(json_data, client):
 
 
 def handle_backend_server_timeout():
-    pass
+    log("Backend Server Timed Out", "error")
 
 
 def format_user_interaction_data(gui_element_data):
@@ -679,7 +694,6 @@ def send_to_backend_server(req):
             isinstance(e.reason, urllib.error.URLError)
             and "timed out" in str(e.reason).lower()
         ):
-            log("Request timed out", "error")
             handle_backend_server_timeout()
         else:
             log("URLError: {}".format(str(e)), "error")
