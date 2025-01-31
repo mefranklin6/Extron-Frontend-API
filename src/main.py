@@ -357,6 +357,24 @@ def show_page(ui_device, page):
         page_state_4.set_page(page)
 
 
+def get_volume(obj, name):
+    return obj.GetVolume(name)
+
+
+def play_sound(obj, filename):
+    obj.PlaySound(filename)
+
+
+def set_led_blinking(obj, ledid, rate, state_list):
+    state_list = state_list.replace("[", "").replace("]", "").split(",")
+    state_list = [state.strip() for state in state_list]
+    obj.SetLEDBlinking(int(ledid), rate, state_list)
+
+
+def set_led_state(obj, ledid, state):
+    obj.SetLEDState(int(ledid), state)
+
+
 def set_level(obj, level):
     obj.SetLevel(int(level))
 
@@ -526,6 +544,10 @@ METHODS_MAP = {
     "ShowPopup": show_popup,
     "HideAllPopups": hide_all_popups,
     "ShowPage": show_page,
+    "GetVolume": get_volume,
+    "PlaySound": play_sound,
+    "SetLEDBlinking": set_led_blinking,
+    "SetLEDState": set_led_state,
     "SetLevel": set_level,
     "SetRange": set_range,
     "Inc": inc,
@@ -647,14 +669,15 @@ def process_rx_data_and_send_reply(json_data, client):
             macro_call_handler(command_type, client, data_dict)
 
         else:
-            log("Unknown action: {}".format(command_type), "error")
+            log("Unknown action: {}".format(str(command_type)), "error")
             if client:
-                client.Send(b"Unknown action{}\n".format(command_type))
+                client.Send(b"Unknown action{}\n".format(str(command_type)))
 
     except (json.JSONDecodeError, KeyError) as e:
         log("Error decoding JSON: {}".format(str(e)), "error")
+        log("Bad JSON raw: {}".format(str(json_data)), "error")
         if client:
-            client.Send(b"Error decoding JSON : {}\n".format(e))
+            client.Send(b"Error decoding JSON : {}\n".format(str(e)))
     except Exception as e:
         log(str(e), "error")
         if client:
