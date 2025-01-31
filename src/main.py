@@ -3,7 +3,12 @@ import urllib.error
 import urllib.request
 
 from extronlib import event
-from extronlib.interface import EthernetServerInterfaceEx
+from extronlib.interface import (
+    EthernetClientInterface,
+    EthernetServerInterfaceEx,
+    RelayInterface,
+    SerialInterface,
+)
 from extronlib.system import File as open
 from extronlib.system import Timer, Wait
 
@@ -13,17 +18,21 @@ from gui_elements.knobs import all_knobs
 from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
 from gui_elements.sliders import all_sliders
-from hardware.ethernet import all_ethernet_interfaces
 from hardware.hardware import all_processors, all_ui_devices
-from hardware.relays import all_relays
-from hardware.serial import all_serial_interfaces
 from utils import backend_server_ok, log, set_ntp
 
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
 
 
-with open("config.json", "r") as f:
-    config = json.load(f)
+def load_json(path):
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except:
+        return None
+
+
+config = load_json("config.json")
 
 
 class PageStateMachine:
@@ -88,6 +97,96 @@ all_state_machines = [
 ]
 
 
+class PortInstantiation:
+    """
+    Instantiates all ports defined in ports.json
+
+    Use port_instantiation_helper.py make the JSON file
+    """
+
+    def __init__(self):
+        self.port_definitions = load_json("ports.json")
+        self.all_relays = []
+        self.all_serial_interfaces = []
+        self.all_ethernet_interfaces = []
+        self.instantiate_ports()
+
+    def instantiate_ports(self):
+        if not self.port_definitions:
+            return
+        for port_definition in self.port_definitions:
+            log("Port Definition: {}".format(port_definition), "info")
+            port_class = port_definition["Class"]
+            if port_class == "RelayInterface":
+                self.instantiate_relays(port_definition)
+            elif port_class == "SerialInterface":
+                self.instantiate_serial_interface(port_definition)
+            elif port_class == "EthernetClientInterface":
+                self.instantiate_ethernet_client_interface(port_definition)
+            else:
+                log("Unknown Port Definition Class: {}".format(port_class), "error")
+
+    def instantiate_relays(self, port_definition):
+        host = port_definition["Host"]
+        port = port_definition["Port"]
+        self.all_relays.append(RelayInterface(PROCESSORS_MAP[host], port))
+
+    def instantiate_serial_interface(self, port_definition):
+        host = port_definition["Host"]
+        port = port_definition["Port"]
+        baud = int(port_definition["Baud"])
+        data = int(port_definition["Data"])
+        stop = int(port_definition["Stop"])
+        char_delay = int(port_definition["CharDelay"])
+        parity = port_definition["Parity"]
+        flow_control = port_definition["FlowControl"]
+        mode = port_definition["Mode"]
+        self.all_serial_interfaces.append(
+            SerialInterface(
+                PROCESSORS_MAP[host],
+                port,
+                Baud=baud,
+                Data=data,
+                Parity=parity,
+                Stop=stop,
+                FlowControl=flow_control,
+                CharDelay=char_delay,
+                Mode=mode,
+            )
+        )
+
+    def instantiate_ethernet_client_interface(self, port_definition):
+        host = port_definition["Hostname"]
+        ip_port = int(port_definition["IPPort"])
+        protocol = port_definition["Protocol"]
+
+        if protocol == "TCP":
+            self.all_ethernet_interfaces.append(
+                EthernetClientInterface(host, ip_port, Protocol=protocol)
+            )
+        elif protocol == "UDP":
+            service_port = port_definition["ServicePort"]
+            buffer_size = port_definition["bufferSize"]
+            self.all_ethernet_interfaces.append(
+                EthernetClientInterface(
+                    host,
+                    ip_port,
+                    Protocol=protocol,
+                    ServicePort=int(service_port),
+                    bufferSize=int(buffer_size),
+                )
+            )
+        elif protocol == "SSH":
+            username = port_definition["Username"]
+            password = port_definition["Password"]
+            credentials = (username, password)
+            self.all_ethernet_interfaces.append(
+                EthernetClientInterface(
+                    host, ip_port, Protocol=protocol, Credentials=credentials
+                )
+            )
+
+
 def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
     # GUI Object: Name = "Name"
@@ -120,9 +219,13 @@ KNOBS_MAP = make_str_obj_map(all_knobs)
 LEVELS_MAP = make_str_obj_map(all_levels)
 SLIDERS_MAP = make_str_obj_map(all_sliders)
 LABELS_MAP = make_str_obj_map(all_labels)
-RELAYS_MAP = make_str_obj_map(all_relays)
-SERIAL_INTERFACE_MAP = make_str_obj_map(all_serial_interfaces)
-ETHERNET_INTERFACE_MAP = make_str_obj_map(all_ethernet_interfaces)
+
+## Ports ##
+ports = PortInstantiation()
+RELAYS_MAP = make_str_obj_map(ports.all_relays)
+SERIAL_INTERFACE_MAP = make_str_obj_map(ports.all_serial_interfaces)
+ETHERNET_INTERFACE_MAP = make_str_obj_map(ports.all_ethernet_interfaces)
+
 ## Custom Classes ##
 PAGE_STATES_MAP = make_str_obj_map(all_state_machines)
 
@@ -272,6 +375,7 @@ def send_and_wait(obj, data, timeout):
 
 
 def reboot(obj):
+    log("Rebooting {}".format(str(obj)), "warning")
     obj.Reboot()
 
 
@@ -571,7 +675,10 @@ def send_to_backend_server(req):
 
     # Timeout
     except urllib.error.URLError as e:
-        if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e.reason):
+        if (
+            isinstance(e.reason, urllib.error.URLError)
+            and "timed out" in str(e.reason).lower()
+        ):
             log("Request timed out", "error")
             handle_backend_server_timeout()
         else:
