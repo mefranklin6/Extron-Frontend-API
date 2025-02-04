@@ -89,6 +89,8 @@ all_buttons = [
 
 ## Architecture
 
+![New Control Architecture](https://github.com/user-attachments/assets/eac01393-f81c-426d-bff2-4b022daee491)
+
 There are two major systems that allow fast responsiveness and extensive control over the GUI.
 
 1. A custom built Remote Procedure Call (RPC) API listening on a port of your choosing. This API will accept unsolicited commands. Currently you can send GUI action commands such as page flips, set text on labels, and all of the common tasks one would use for making a responsive GUI. This API can be controlled from a server or you can even send commands through `curl`.  Additionally, you can use this API to get the properties of your processors, touch panels, GUI elements or even send reboot commands.
