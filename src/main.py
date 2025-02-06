@@ -686,6 +686,7 @@ def process_rx_data_and_send_reply(json_data, client):
 
 def handle_backend_server_timeout():
     log("Backend Server Timed Out", "error")
+    v.backend_server_timeout_count += 1
 
 
 def format_user_interaction_data(gui_element_data):
@@ -704,25 +705,32 @@ def format_user_interaction_data(gui_element_data):
 
 
 def send_to_backend_server(req):
-    try:
-        with urllib.request.urlopen(
-            req, timeout=int(config["backend_server_timeout"])
-        ) as response:
-            response_data = response.read().decode()
-            process_rx_data_and_send_reply(response_data, None)
+    if not req:
+        log("No backend server set. Cannot send data", "error")
+        return
 
-    # Timeout
-    except urllib.error.URLError as e:
-        if (
-            isinstance(e.reason, urllib.error.URLError)
-            and "timed out" in str(e.reason).lower()
-        ):
-            handle_backend_server_timeout()
-        else:
-            log("URLError: {}".format(str(e)), "error")
+    @Wait(0)
+    def _send_to_backend_server():
+        try:
+            with urllib.request.urlopen(
+                req, timeout=int(config["backend_server_timeout"])
+            ) as response:
+                response_data = response.read().decode()
+                process_rx_data_and_send_reply(response_data, None)
 
-    except Exception as e:
-        log(str(e), "error")
+        # Timeout
+        except urllib.error.URLError as e:
+            if "timed out" in str(e.reason).lower():
+                handle_backend_server_timeout()
+            else:
+                log("URLError: {}".format(str(e)), "error")
+                return
+
+        except Exception as e:
+            log(str(e), "error")
+            return
+
+        v.backend_server_timeout_count = 0
 
 
 def send_user_interaction(gui_element_data):
@@ -731,8 +739,6 @@ def send_user_interaction(gui_element_data):
 
 
 #### RPC Server ####
-
-# TODO: IP allow list filteirng
 
 rpc_serv = EthernetServerInterfaceEx(
     IPPort=int(config["rpc_server_port"]),
@@ -746,7 +752,7 @@ if rpc_serv.StartListen() != "Listening":
 
 @event(rpc_serv, "ReceiveData")
 def handle_unsolicited_rpc_rx(client, data):
-    # log("Rx: {}".format(data), "info")
+    # log("Rx: {}".format(str(data)), "info")
     try:
         data_str = data.decode()
 
@@ -757,7 +763,7 @@ def handle_unsolicited_rpc_rx(client, data):
             # log(str(body), "info")
             process_rx_data_and_send_reply(body, client)
             if "User-Agent: curl" in data_str:
-                client.Disconnect() # curl expects a disconnect after a response
+                client.Disconnect()  # curl expects a disconnect after a response
         else:
             log("No data received", "error")
     except json.JSONDecodeError as e:
