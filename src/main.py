@@ -690,6 +690,9 @@ def handle_backend_server_timeout():
 
 
 def format_user_interaction_data(gui_element_data):
+    if v.backend_server_available != True:
+        return None
+    
     domain = gui_element_data[0]
     data = {
         "name": gui_element_data[1],
