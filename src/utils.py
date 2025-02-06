@@ -5,22 +5,25 @@ from extronlib.system import Ping, ProgramLog, SetAutomaticTime
 
 
 def set_ntp(ntp_primary, ntp_secondary=None):
-    success_count, fail_count, rtt = Ping(ntp_primary, count=1)
-    if success_count > 0:
-        SetAutomaticTime(ntp_primary)
-        ProgramLog("Set NTP to primary server at {}".format(ntp_primary), "info")
-        ProgramLog("NTP Primary RTT: {}".format(rtt), "info")
-        return
-    if ntp_secondary:
-        success_count, fail_count, rtt = Ping(ntp_secondary, count=1)
+    try:
+        success_count, fail_count, rtt = Ping(ntp_primary, count=1)
         if success_count > 0:
-            SetAutomaticTime(ntp_secondary)
-            ProgramLog(
-                "Set NTP to secondary server at {}".format(ntp_secondary), "info"
-            )
+            SetAutomaticTime(ntp_primary)
+            ProgramLog("Set NTP to primary server at {}".format(ntp_primary), "info")
+            ProgramLog("NTP Primary RTT: {}".format(rtt), "info")
             return
-        else:
-            ProgramLog("NTP servers are unreachable", "error")
+        if ntp_secondary:
+            success_count, fail_count, rtt = Ping(ntp_secondary, count=1)
+            if success_count > 0:
+                SetAutomaticTime(ntp_secondary)
+                ProgramLog(
+                    "Set NTP to secondary server at {}".format(ntp_secondary), "info"
+                )
+                return
+            else:
+                ProgramLog("NTP servers are unreachable", "error")
+    except Exception as e:
+        ProgramLog("Error setting NTP: {}".format(str(e)), "error")
 
 
 def log(message, level="info"):
