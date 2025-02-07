@@ -106,7 +106,10 @@ class InstantionConverter:
             try:
                 for root, dirs, files in os.walk(selected_directory):
                     for file in files:
-                        if file.endswith(".py"):
+                        if (
+                            file.endswith(".py")
+                            and "gui_element_instantiation_converter" not in file
+                        ):
                             self._process_file(os.path.join(root, file))
 
             except FileNotFoundError:
@@ -159,12 +162,7 @@ def start_conversion():
 root = tk.Tk()
 root.title("GUI Instantiation Converter")
 
-label = tk.Label(
-    root,
-    text=info,
-    anchor="w",
-    justify="left"
-)
+label = tk.Label(root, text=info, anchor="w", justify="left")
 label.pack(pady=10, fill="both")
 
 button_select = tk.Button(root, text="Select Directory", command=select_directory)
