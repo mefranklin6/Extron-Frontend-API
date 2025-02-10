@@ -216,7 +216,7 @@ def make_str_obj_map(element_list):
         except AttributeError:
             continue
         except Exception as e:
-            log(str(e), "error")
+            log("Error creating string:object dict: {}".format(str(e)), "error")
             return None
 
     log(
@@ -443,10 +443,10 @@ def get_property_(obj, property):
         attribute = getattr(obj, property)
         return attribute
     except AttributeError as e:
-        log(str(e), "error")
+        log("GetProperty Attribute Error: {}".format(str(e)), "error")
         return e
     except Exception as e:
-        log(str(e), "error")
+        log("GetProperty bare exception: {}".format(str(e)), "error")
         return e
 
 
@@ -600,11 +600,9 @@ def get_object(string_key, object_map):
         return object_map[string_key]
     except KeyError:
         log("{} not in {}".format(string_key, object_map), "error")
-        log("Valid options for map are: {}".format(object_map.keys()), "info")
         return None
     except Exception as e:
-        log(str(e), "error")
-        log("Valid options for map are: {}".format(object_map.keys()), "info")
+        log("GetObject bare exception: {}".format(str(e)), "error")
         return None
 
 
@@ -676,19 +674,23 @@ def process_rx_data_and_send_reply(json_data, client):
                 client.Send(b"Unknown action{}\n".format(str(command_type)))
 
     except (json.JSONDecodeError, KeyError) as e:
-        log("Error decoding JSON: {}".format(str(e)), "error")
-        log("Bad JSON raw: {}".format(str(json_data)), "error")
+        error = "400 Bad Request | Error decoding JSON : {}\n".format(str(e))
+        log(error, "error")
         if client:
-            client.Send(b"400 Bad Request | Error decoding JSON : {}\n".format(str(e)))
+            client.Send(error)
     except Exception as e:
-        log(str(e), "error")
+        error = b"400 Bad Request | Error processing data : {}".format(str(e))
+        log(error, "error")
         if client:
-            client.Send(b"400 Bad Request | Error processing data : {}".format(str(e)))
+            client.Send(error)
 
 
 def handle_backend_server_timeout():
-    log("Backend Server Timed Out", "error")
     v.backend_server_timeout_count += 1
+    log(
+        "Backend Server Timed Out Count: {}".format(v.backend_server_timeout_count),
+        "error",
+    )
 
 
 def format_user_interaction_data(gui_element_data):
@@ -732,7 +734,7 @@ def send_to_backend_server(req):
                 return
 
         except Exception as e:
-            log(str(e), "error")
+            log("Bare Exception for send_to_backend_server: {}".format(str(e)), "error")
             return
 
         v.backend_server_timeout_count = 0
@@ -772,9 +774,9 @@ def handle_unsolicited_rpc_rx(client, data):
         else:
             log("No data received", "error")
     except json.JSONDecodeError as e:
-        log(str(e), "error")
+        log("JSON Decode Error on RPC Rx: {}".format(str(e)), "error")
     except Exception as e:
-        log(str(e), "error")
+        log("Bare Exception in RPC Rx: {}".format(str(e)), "error")
 
 
 @event(rpc_serv, "Connected")
