@@ -502,11 +502,11 @@ def set_backend_server_(ip=None):
             _set_server(
                 "custom", ip, "Using custom backend server: {}".format(ip), "warning"
             )
-            return "OK"
+            return "200 OK | Custom IP"
         else:
             err = "Custom backend server {} is not available".format(ip)
             _no_server(err)
-            return err
+            return "502 Bad Gateway | {}".format(err)
 
     # Try primary from the config
     if backend_server_ok(config["primary_backend_server_ip"]):
@@ -516,7 +516,7 @@ def set_backend_server_(ip=None):
             "Using primary backend server",
             "info",
         )
-        return "OK"
+        return "200 OK | Primary Server Selected"
     # Try secondary from the config
     elif backend_server_ok(config["secondary_backend_server_ip"]):
         _set_server(
@@ -525,10 +525,10 @@ def set_backend_server_(ip=None):
             "Using secondary backend server",
             "warning",
         )
-        return "OK"
+        return "200 OK | Secondary Server Selected"
     else:
         _no_server("No backend servers available")
-        return "No backend servers available"
+        return "502 Bad Gateway | No backend servers available"
 
 
 METHODS_MAP = {
@@ -626,10 +626,12 @@ def method_call_handler(data):
         args = [arg for arg in [arg1, arg2, arg3] if arg not in ["", None]]
         result = func(obj, *args)
         if result == None:
-            return "OK"
-        return str(result)
+            return "200 OK"
+        return "200 OK | {}".format(str(result))
     except Exception as e:
-        error = "Function Error: {} | with data {}".format(str(e), str(data))
+        error = "400 Bad Request | Function Error: {} | with data {}".format(
+            str(e), str(data)
+        )
         log(str(error), "error")
         return str(error)
 
@@ -677,11 +679,11 @@ def process_rx_data_and_send_reply(json_data, client):
         log("Error decoding JSON: {}".format(str(e)), "error")
         log("Bad JSON raw: {}".format(str(json_data)), "error")
         if client:
-            client.Send(b"Error decoding JSON : {}\n".format(str(e)))
+            client.Send(b"400 Bad Request | Error decoding JSON : {}\n".format(str(e)))
     except Exception as e:
         log(str(e), "error")
         if client:
-            client.Send(b"Error processing data : {}".format(str(e)))
+            client.Send(b"400 Bad Request | Error processing data : {}".format(str(e)))
 
 
 def handle_backend_server_timeout():
@@ -692,7 +694,7 @@ def handle_backend_server_timeout():
 def format_user_interaction_data(gui_element_data):
     if v.backend_server_available != True:
         return None
-    
+
     domain = gui_element_data[0]
     data = {
         "name": gui_element_data[1],
