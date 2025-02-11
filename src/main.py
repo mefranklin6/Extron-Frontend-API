@@ -759,24 +759,30 @@ if rpc_serv.StartListen() != "Listening":
 
 @event(rpc_serv, "ReceiveData")
 def handle_unsolicited_rpc_rx(client, data):
-    # log("Rx: {}".format(str(data)), "info")
     try:
         data_str = data.decode()
 
         # Extract the body from the HTTP request
-        body = data_str.split("\r\n\r\n", 1)[1]
+        parts = data_str.split("\r\n\r\n", 1)
+        if len(parts) > 1:
+            body = parts[1]
+        else:
+            body = ""
 
         if body:
-            # log(str(body), "info")
+            log(str(body), "info")
             process_rx_data_and_send_reply(body, client)
-            if "User-Agent: curl" in data_str:
-                client.Disconnect()  # curl expects a disconnect after a response
         else:
             log("No data received", "error")
     except json.JSONDecodeError as e:
         log("JSON Decode Error on RPC Rx: {}".format(str(e)), "error")
     except Exception as e:
-        log("Bare Exception in RPC Rx: {}".format(str(e)), "error")
+        log(
+            "Bare Exception in RPC Rx: {}".format(str(e)),
+            "error",
+        )
+    finally:
+        client.Disconnect()
 
 
 @event(rpc_serv, "Connected")
