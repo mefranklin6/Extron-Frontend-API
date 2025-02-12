@@ -591,22 +591,37 @@ def any_slider_changed(slider, action, value):
 #### Internal Functions ####
 
 
+def send_client_error(client, code, description):
+    if code == "400":
+        prefix = "400 Bad Request"
+    else:
+        prefix = ""
+
+    formatted = "{} | {}".format(prefix, description)
+    log(formatted, "error")
+    if client:
+        client.Send(formatted)
+
+
 def get_object(string_key, object_map):
     """
     Pass in string representing an object and the dictionary map of the object domain,
-    returns the object
+    returns a tuple golang style (object, error).
     """
     try:
-        return object_map[string_key]
+        return object_map[string_key], None
     except KeyError:
-        log("{} not in {}".format(string_key, object_map), "error")
-        return None
+        error = "{} not in {}".format(string_key, object_map)
+        log(error, "error")
+        return None, error
     except Exception as e:
-        log("GetObject bare exception: {}".format(str(e)), "error")
-        return None
+        error = "GetObject bare exception: {}".format(str(e))
+        log(error, "error")
+        return None, error
 
 
 def method_call_handler(data):
+    """Executes functions and returns the results or an error message"""
     try:
         # Required
         type_str = data["type"]
@@ -619,11 +634,14 @@ def method_call_handler(data):
         arg3 = data.get("arg3", None)
 
         object_type_map = DOMAIN_CLASS_MAP[type_str]
-        obj = get_object(object_str, object_type_map)
+        obj, err = get_object(object_str, object_type_map)
+        if err != None:
+            return err
+
         func = METHODS_MAP[function_str]
         args = [arg for arg in [arg1, arg2, arg3] if arg not in ["", None]]
         result = func(obj, *args)
-        if result == None:
+        if result is None:
             return "200 OK"
         return "200 OK | {}".format(str(result))
     except Exception as e:
@@ -631,7 +649,7 @@ def method_call_handler(data):
             str(e), str(data)
         )
         log(str(error), "error")
-        return str(error)
+        return error
 
 
 def macro_call_handler(command_type, client=None, data_dict=None):
@@ -656,33 +674,37 @@ def process_rx_data_and_send_reply(json_data, client):
     # Client is only present when function is called from RPC server
     # Function does not send replies when invoked as a REST API reply processor
     try:
-        data_dict = json.loads(json_data)
-        command_type = data_dict["type"]
-
-        if command_type in DOMAIN_CLASS_MAP.keys():
-            result = method_call_handler(data_dict)
-            if client:
-                client.Send(result)
-            return
-
-        elif command_type in MACROS_MAP.keys():
-            macro_call_handler(command_type, client, data_dict)
-
-        else:
-            log("Unknown action: {}".format(str(command_type)), "error")
-            if client:
-                client.Send(b"Unknown action{}\n".format(str(command_type)))
-
+        data = json.loads(json_data)
     except (json.JSONDecodeError, KeyError) as e:
-        error = "400 Bad Request | Error decoding JSON : {}\n".format(str(e))
-        log(error, "error")
-        if client:
-            client.Send(error)
+        send_client_error(client, "400", "Error decoding JSON: {}".format(str(e)))
+        return
+
+    # Rest of function expects a list
+    if isinstance(data, dict):
+        data = [data]
+
+    try:
+        for command in data:
+            command_type = command["type"]
+
+            if command_type in DOMAIN_CLASS_MAP.keys():
+                result = method_call_handler(command)
+                if client:
+                    client.Send(result)
+                return
+
+            elif command_type in MACROS_MAP.keys():
+                macro_call_handler(command_type, client, command)
+
+            else:
+                send_client_error(
+                    client, "400", "Unknown Action: {}".format(str(command_type))
+                )
+    except KeyError as e:
+        send_client_error(client, "400", "Key Error : {}".format(str(e)))
+
     except Exception as e:
-        error = b"400 Bad Request | Error processing data : {}".format(str(e))
-        log(error, "error")
-        if client:
-            client.Send(error)
+        send_client_error(client, "400", "Bare Except : {}".format(str(e)))
 
 
 def handle_backend_server_timeout():
