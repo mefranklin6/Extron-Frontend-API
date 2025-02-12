@@ -621,7 +621,10 @@ def get_object(string_key, object_map):
 
 
 def method_call_handler(data):
-    """Executes functions and returns the results or an error message"""
+    """
+    Executes functions (different from "Macros"),
+    returns tuple golang style (data, error)
+    """
     try:
         # Required
         type_str = data["type"]
@@ -642,32 +645,38 @@ def method_call_handler(data):
         args = [arg for arg in [arg1, arg2, arg3] if arg not in ["", None]]
         result = func(obj, *args)
         if result is None:
-            return "200 OK"
-        return "200 OK | {}".format(str(result))
+            return ("200 OK", None)
+        return ("200 OK | {}".format(str(result)), None)
     except Exception as e:
         error = "400 Bad Request | Function Error: {} | with data {}".format(
             str(e), str(data)
         )
         log(str(error), "error")
-        return error
+        return None, error
 
 
-def macro_call_handler(command_type, client=None, data_dict=None):
+def macro_call_handler(command_type, data_dict=None):
+    """
+    Executes Macros (different from "Functions"),
+    returns tuple golang style (data, error)
+    """
     if command_type == "get_all_elements":
-        if not client:
-            return
-        else:
+        try:
             data = get_all_elements_()
             data = json.dumps(data).encode()
-            client.Send(data)
-            return
+            return (data, None)
+        except Exception as e:
+            return (None, e)
 
     elif command_type == "set_backend_server":
-        ip = data_dict.get("ip", None)
-        result = set_backend_server_(ip)
-        if client:
-            client.Send(result)
-        return
+        try:
+            ip = data_dict.get("ip", None)
+            result = set_backend_server_(ip)
+            return (result, None)
+        except Exception as e:
+            return (None, e)
+    else:
+        return (None, "Macro: {} Not Found".format(command_type))
 
 
 def process_rx_data_and_send_reply(json_data, client):
@@ -679,32 +688,60 @@ def process_rx_data_and_send_reply(json_data, client):
         send_client_error(client, "400", "Error decoding JSON: {}".format(str(e)))
         return
 
-    # Rest of function expects a list
+    # Make compatible with list processing below
     if isinstance(data, dict):
         data = [data]
 
-    try:
-        for command in data:
-            command_type = command["type"]
+    if not isinstance(data, list):
+        send_client_error(
+            client,
+            "400",
+            "Data type must be interpreted as list or dict. Found {}".format(
+                type(data)
+            ),
+        )
+        return
 
+    errors = []
+    results = []
+
+    for command in data:
+        try:
+            command_type = command["type"]
             if command_type in DOMAIN_CLASS_MAP.keys():
-                result = method_call_handler(command)
-                if client:
-                    client.Send(result)
-                return
+                result, err = method_call_handler(command)
+                if err != None:
+                    errors.append(err)
+                else:
+                    results.append(result)
+                continue
 
             elif command_type in MACROS_MAP.keys():
-                macro_call_handler(command_type, client, command)
+                if not client:
+                    raise Exception("Macro command called without client")
+                result, err = macro_call_handler(command_type, command)
+                if err != None:
+                    errors.append(err)
+                else:
+                    results.append(result)
+                continue
 
             else:
-                send_client_error(
-                    client, "400", "Unknown Action: {}".format(str(command_type))
-                )
-    except KeyError as e:
-        send_client_error(client, "400", "Key Error : {}".format(str(e)))
+                errors.append("Unknown Action: {}".format(str(command_type)))
 
-    except Exception as e:
-        send_client_error(client, "400", "Bare Except : {}".format(str(e)))
+        except KeyError as e:
+            errors.append("Key Error: {}".format(str(e)))
+        except Exception as e:
+            errors.append("Bare Except: {}".format(str(e)))
+
+    if len(errors) == 0:
+        print("results {}".format(results))
+        if client:
+            client.Send(str(results))
+    else:
+        print("errors {}".format(errors))
+        if client:
+            client.Send(str(errors))
 
 
 def handle_backend_server_timeout():
@@ -729,12 +766,14 @@ def format_user_interaction_data(gui_element_data):
     data = json.dumps(data).encode()
     headers = {"Content-Type": "application/json"}
     url = "{}/api/v1/{}".format(v.backend_server_ip, domain)
-    req = urllib.request.Request(url, data=data, headers=headers, method="PUT")
-    return req
+    user_data_req = urllib.request.Request(
+        url, data=data, headers=headers, method="PUT"
+    )
+    return user_data_req
 
 
-def send_to_backend_server(req):
-    if not req:
+def send_to_backend_server(user_data_req):
+    if not user_data_req:
         log("No backend server set. Cannot send data", "error")
         return
 
@@ -742,7 +781,7 @@ def send_to_backend_server(req):
     def _send_to_backend_server():
         try:
             with urllib.request.urlopen(
-                req, timeout=int(config["backend_server_timeout"])
+                user_data_req, timeout=int(config["backend_server_timeout"])
             ) as response:
                 response_data = response.read().decode()
                 process_rx_data_and_send_reply(response_data, None)
@@ -763,8 +802,8 @@ def send_to_backend_server(req):
 
 
 def send_user_interaction(gui_element_data):
-    req = format_user_interaction_data(gui_element_data)
-    send_to_backend_server(req)
+    user_data_req = format_user_interaction_data(gui_element_data)
+    send_to_backend_server(user_data_req)
 
 
 #### RPC Server ####
@@ -790,12 +829,6 @@ def handle_unsolicited_rpc_rx(client, data):
             body = parts[1]
         else:
             body = ""
-
-        if body:
-            log(str(body), "info")
-            process_rx_data_and_send_reply(body, client)
-        else:
-            log("No data received", "error")
     except json.JSONDecodeError as e:
         log("JSON Decode Error on RPC Rx: {}".format(str(e)), "error")
     except Exception as e:
@@ -804,6 +837,10 @@ def handle_unsolicited_rpc_rx(client, data):
             "error",
         )
     finally:
+        if body:
+            process_rx_data_and_send_reply(body, client)
+        else:
+            log("No data received", "error")
         client.Disconnect()
 
 
