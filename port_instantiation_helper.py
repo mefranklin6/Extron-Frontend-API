@@ -5,6 +5,8 @@ from tkinter import messagebox, ttk
 """
 Helper tool to generate JSON for port instantiation (Serial, Relay, Ethernet)
 
+Place this file in the root of your projects directory
+
 Run this on a workstation, not on the processor
 """
 
@@ -73,6 +75,7 @@ class PortInstantiationApp:
 
     def create_serial_interface(self):
         struct = {
+            "Alias": "",
             "Host": "",
             "Port": "",
             "Baud": 9600,
@@ -159,6 +162,188 @@ class PortInstantiationApp:
             self.serial_frame, text="Export over SFTP", command=self.export_prompt
         )
         export_button.pack(pady=10)
+
+    def create_ethernet_interface(self):
+        struct = {
+            "Alias": "",
+            "Hostname": "",
+            "IPPort": "",
+            "Protocol": "TCP",
+            "Username": "",
+            "Password": "",
+            "ServicePort": 0,
+            "bufferSize": 4096,
+        }
+        self.ethernet_entries = {}
+        self.protocol_var = tk.StringVar(value="TCP")
+
+        for field, default in struct.items():
+            if field == "Protocol":
+                label = ttk.Label(self.ethernet_frame, text=field)
+                label.pack()
+                frame = ttk.Frame(self.ethernet_frame)
+                frame.pack()
+                for protocol in ["TCP", "UDP", "SSH"]:
+                    radio = ttk.Radiobutton(
+                        frame,
+                        text=protocol,
+                        variable=self.protocol_var,
+                        value=protocol,
+                        command=self.update_ethernet_fields,
+                    )
+                    radio.pack(side="left")
+            else:
+                label = ttk.Label(self.ethernet_frame, text=field)
+                label.pack()
+                entry = ttk.Entry(self.ethernet_frame)
+                entry.insert(0, default)
+                entry.pack()
+                self.ethernet_entries[field] = entry
+
+        self.update_ethernet_fields()
+
+        generate_button = ttk.Button(
+            self.ethernet_frame,
+            text="Generate and Add",
+            command=self.generate_ethernet_json,
+        )
+        generate_button.pack(pady=10)
+
+        preview_button = ttk.Button(
+            self.ethernet_frame, text="Preview Export", command=self.show_preview
+        )
+        preview_button.pack(pady=10)
+
+        export_button = ttk.Button(
+            self.ethernet_frame, text="Export over SFTP", command=self.export_prompt
+        )
+        export_button.pack(pady=10)
+
+    def update_ethernet_fields(self):
+        protocol = self.protocol_var.get()
+        if protocol == "TCP":
+            self.ethernet_entries["IPPort"].delete(0, tk.END)
+            self.ethernet_entries["IPPort"].insert(0, "23")
+            self.ethernet_entries["ServicePort"].config(state="disabled")
+            self.ethernet_entries["Username"].config(state="disabled")
+            self.ethernet_entries["Password"].config(state="disabled")
+            self.ethernet_entries["bufferSize"].config(state="disabled")
+        elif protocol == "UDP":
+            self.ethernet_entries["IPPort"].delete(0, tk.END)
+            self.ethernet_entries["ServicePort"].config(state="normal")
+            self.ethernet_entries["Username"].config(state="disabled")
+            self.ethernet_entries["Password"].config(state="disabled")
+            self.ethernet_entries["bufferSize"].config(state="normal")
+        elif protocol == "SSH":
+            self.ethernet_entries["IPPort"].delete(0, tk.END)
+            self.ethernet_entries["IPPort"].insert(0, "22023")
+            self.ethernet_entries["ServicePort"].config(state="disabled")
+            self.ethernet_entries["Username"].config(state="normal")
+            self.ethernet_entries["Password"].config(state="normal")
+            self.ethernet_entries["bufferSize"].config(state="disabled")
+
+    def create_relay_interface(self):
+        struct = {"Alias": "", "Host": "", "Port": ""}
+        hosts_option_len = len(self.host_options)
+        if hosts_option_len == 1:
+            struct["Host"] = self.host_options[0]
+        elif hosts_option_len > 1:
+            button_frame = ttk.Frame(self.relay_frame)
+            button_frame.pack(pady=10)
+            for host in self.host_options:
+                button = ttk.Button(
+                    button_frame,
+                    text=host,
+                    command=lambda h=host: self.relay_entries["Host"].delete(0, tk.END)
+                    or self.relay_entries["Host"].insert(0, h),
+                )
+                button.pack(side="left")
+
+        self.relay_entries = {}
+        for field, default in struct.items():
+            label = ttk.Label(self.relay_frame, text=field)
+            label.pack()
+            entry = ttk.Entry(self.relay_frame)
+            entry.insert(0, default)
+            entry.pack()
+            self.relay_entries[field] = entry
+
+            generate_button = ttk.Button(
+                self.relay_frame,
+                text="Generate and Add",
+                command=self.generate_relay_json,
+            )
+        generate_button.pack(pady=10)
+
+        preview_button = ttk.Button(
+            self.relay_frame, text="Preview Export", command=self.show_preview
+        )
+        preview_button.pack(pady=10)
+
+        export_button = ttk.Button(
+            self.relay_frame, text="Export over SFTP", command=self.export_prompt
+        )
+        export_button.pack(pady=10)
+
+    def generate_serial_json(self):
+        data = {field: entry.get() for field, entry in self.serial_entries.items()}
+        if not data["Port"].startswith("COM"):
+            messagebox.showerror(
+                "Error", "Malformed Serial Port: must start with 'COM'."
+            )
+            return
+        data["Class"] = "SerialInterface"
+        data["Parity"] = self.parity_var.get()
+        data["FlowControl"] = self.flowcontrol_var.get()
+        data["Mode"] = self.mode_var.get()
+        self.json_cache.append(data)
+        self.serial_entries["Port"].delete(0, tk.END)
+        self.serial_entries["Alias"].delete(0, tk.END)
+
+    def generate_ethernet_json(self):
+        data = {field: entry.get() for field, entry in self.ethernet_entries.items()}
+
+        if data["Hostname"] == "":
+            messagebox.showerror("Error", "Hostname cannot be empty.")
+            return
+
+        data["Class"] = "EthernetClientInterface"
+        protocol = self.protocol_var.get()
+        data["Protocol"] = protocol
+
+        tcp_pop = ["Username", "Password", "ServicePort", "bufferSize"]
+        udp_pop = ["Username", "Password"]
+        ssh_pop = ["ServicePort", "bufferSize"]
+
+        if protocol == "TCP":
+            pop_list = tcp_pop
+        elif protocol == "UDP":
+            pop_list = udp_pop
+        elif protocol == "SSH":
+            pop_list = ssh_pop
+            if data["Username"] == "" or data["Password"] == "":
+                messagebox.showerror("Error", "Missing Credentials for SSH")
+                return
+
+        for pop_item in pop_list:
+            data.pop(pop_item)
+
+        self.json_cache.append(data)
+
+        self.ethernet_entries["Hostname"].delete(0, tk.END)
+        self.ethernet_entries["Alias"].delete(0, tk.END)
+
+    def generate_relay_json(self):
+        data = {field: entry.get() for field, entry in self.relay_entries.items()}
+        if not data["Port"].startswith("RLY"):
+            messagebox.showerror(
+                "Error", "Malformed Relay Port: must start with 'RLY'."
+            )
+            return
+        data["Class"] = "RelayInterface"
+        self.json_cache.append(data)
+        self.relay_entries["Port"].delete(0, tk.END)
+        self.relay_entries["Alias"].delete(0, tk.END)
 
     def show_preview(self):
         preview_window = tk.Toplevel(self.root)
@@ -278,184 +463,6 @@ To fix this error, please `pip install paramiko`
             processor_info_window, text="Submit", command=on_submit
         )
         submit_button.pack(pady=10)
-
-    def create_ethernet_interface(self):
-        struct = {
-            "Hostname": "",
-            "IPPort": "",
-            "Protocol": "TCP",
-            "Username": "",
-            "Password": "",
-            "ServicePort": 0,
-            "bufferSize": 4096,
-        }
-        self.ethernet_entries = {}
-        self.protocol_var = tk.StringVar(value="TCP")
-
-        for field, default in struct.items():
-            if field == "Protocol":
-                label = ttk.Label(self.ethernet_frame, text=field)
-                label.pack()
-                frame = ttk.Frame(self.ethernet_frame)
-                frame.pack()
-                for protocol in ["TCP", "UDP", "SSH"]:
-                    radio = ttk.Radiobutton(
-                        frame,
-                        text=protocol,
-                        variable=self.protocol_var,
-                        value=protocol,
-                        command=self.update_ethernet_fields,
-                    )
-                    radio.pack(side="left")
-            else:
-                label = ttk.Label(self.ethernet_frame, text=field)
-                label.pack()
-                entry = ttk.Entry(self.ethernet_frame)
-                entry.insert(0, default)
-                entry.pack()
-                self.ethernet_entries[field] = entry
-
-        self.update_ethernet_fields()
-
-        generate_button = ttk.Button(
-            self.ethernet_frame,
-            text="Generate and Add",
-            command=self.generate_ethernet_json,
-        )
-        generate_button.pack(pady=10)
-
-        preview_button = ttk.Button(
-            self.ethernet_frame, text="Preview Export", command=self.show_preview
-        )
-        preview_button.pack(pady=10)
-
-        export_button = ttk.Button(
-            self.ethernet_frame, text="Export over SFTP", command=self.export_prompt
-        )
-        export_button.pack(pady=10)
-
-    def update_ethernet_fields(self):
-        protocol = self.protocol_var.get()
-        if protocol == "TCP":
-            self.ethernet_entries["IPPort"].delete(0, tk.END)
-            self.ethernet_entries["IPPort"].insert(0, "23")
-            self.ethernet_entries["ServicePort"].config(state="disabled")
-            self.ethernet_entries["Username"].config(state="disabled")
-            self.ethernet_entries["Password"].config(state="disabled")
-            self.ethernet_entries["bufferSize"].config(state="disabled")
-        elif protocol == "UDP":
-            self.ethernet_entries["IPPort"].delete(0, tk.END)
-            self.ethernet_entries["ServicePort"].config(state="normal")
-            self.ethernet_entries["Username"].config(state="disabled")
-            self.ethernet_entries["Password"].config(state="disabled")
-            self.ethernet_entries["bufferSize"].config(state="normal")
-        elif protocol == "SSH":
-            self.ethernet_entries["IPPort"].delete(0, tk.END)
-            self.ethernet_entries["IPPort"].insert(0, "22023")
-            self.ethernet_entries["ServicePort"].config(state="disabled")
-            self.ethernet_entries["Username"].config(state="normal")
-            self.ethernet_entries["Password"].config(state="normal")
-            self.ethernet_entries["bufferSize"].config(state="disabled")
-
-    def create_relay_interface(self):
-        struct = {"Host": "", "Port": ""}
-        hosts_option_len = len(self.host_options)
-        if hosts_option_len == 1:
-            struct["Host"] = self.host_options[0]
-        elif hosts_option_len > 1:
-            button_frame = ttk.Frame(self.relay_frame)
-            button_frame.pack(pady=10)
-            for host in self.host_options:
-                button = ttk.Button(
-                    button_frame,
-                    text=host,
-                    command=lambda h=host: self.relay_entries["Host"].delete(0, tk.END)
-                    or self.relay_entries["Host"].insert(0, h),
-                )
-                button.pack(side="left")
-
-        self.relay_entries = {}
-        for field, default in struct.items():
-            label = ttk.Label(self.relay_frame, text=field)
-            label.pack()
-            entry = ttk.Entry(self.relay_frame)
-            entry.insert(0, default)
-            entry.pack()
-            self.relay_entries[field] = entry
-
-            generate_button = ttk.Button(
-                self.relay_frame,
-                text="Generate and Add",
-                command=self.generate_relay_json,
-            )
-        generate_button.pack(pady=10)
-
-        preview_button = ttk.Button(
-            self.relay_frame, text="Preview Export", command=self.show_preview
-        )
-        preview_button.pack(pady=10)
-
-        export_button = ttk.Button(
-            self.relay_frame, text="Export over SFTP", command=self.export_prompt
-        )
-        export_button.pack(pady=10)
-
-    def generate_serial_json(self):
-        data = {field: entry.get() for field, entry in self.serial_entries.items()}
-        if not data["Port"].startswith("COM"):
-            messagebox.showerror(
-                "Error", "Malformed Serial Port: must start with 'COM'."
-            )
-            return
-        data["Class"] = "SerialInterface"
-        data["Parity"] = self.parity_var.get()
-        data["FlowControl"] = self.flowcontrol_var.get()
-        data["Mode"] = self.mode_var.get()
-        self.json_cache.append(data)
-        self.serial_entries["Port"].delete(0, tk.END)
-
-    def generate_ethernet_json(self):
-        data = {field: entry.get() for field, entry in self.ethernet_entries.items()}
-
-        if data["Hostname"] == "":
-            messagebox.showerror("Error", "Hostname cannot be empty.")
-            return
-
-        data["Class"] = "EthernetClientInterface"
-        protocol = self.protocol_var.get()
-        data["Protocol"] = protocol
-
-        tcp_pop = ["Username", "Password", "ServicePort", "bufferSize"]
-        udp_pop = ["Username", "Password"]
-        ssh_pop = ["ServicePort", "bufferSize"]
-
-        if protocol == "TCP":
-            pop_list = tcp_pop
-        elif protocol == "UDP":
-            pop_list = udp_pop
-        elif protocol == "SSH":
-            pop_list = ssh_pop
-            if data["Username"] == "" or data["Password"] == "":
-                messagebox.showerror("Error", "Missing Credentials for SSH")
-                return
-
-        for pop_item in pop_list:
-            data.pop(pop_item)
-
-        self.json_cache.append(data)
-
-        self.ethernet_entries["Hostname"].delete(0, tk.END)
-
-    def generate_relay_json(self):
-        data = {field: entry.get() for field, entry in self.relay_entries.items()}
-        if not data["Port"].startswith("RLY"):
-            messagebox.showerror(
-                "Error", "Malformed Relay Port: must start with 'RLY'."
-            )
-            return
-        data["Class"] = "RelayInterface"
-        self.json_cache.append(data)
-        self.relay_entries["Port"].delete(0, tk.END)
 
 
 if __name__ == "__main__":
