@@ -45,7 +45,7 @@ class PageStateMachine:
 
     def __init__(self, ui_device, name):
         self.ui_device = str(ui_device)
-        self.Name = name
+        self.name = name
 
         self.current_page = "unknown"
         self.current_popup = "unknown"  # includes modals
@@ -79,16 +79,16 @@ class PageStateMachine:
         self._add_to_all(popup, self.all_popups_called)
 
 
-page_state_1 = PageStateMachine(all_ui_devices[0], "PageState1")
+page_state_1 = PageStateMachine(all_ui_devices[0], all_ui_devices[0].DeviceAlias)
 page_state_2 = None
 page_state_3 = None
 page_state_4 = None
 if len(all_ui_devices) > 1:
-    page_state_2 = PageStateMachine(all_ui_devices[1], "PageState2")
+    page_state_2 = PageStateMachine(all_ui_devices[1], all_ui_devices[1].DeviceAlias)
 if len(all_ui_devices) > 2:
-    page_state_3 = PageStateMachine(all_ui_devices[2], "PageState3")
+    page_state_3 = PageStateMachine(all_ui_devices[2], all_ui_devices[2].DeviceAlias)
 if len(all_ui_devices) > 3:
-    page_state_4 = PageStateMachine(all_ui_devices[3], "PageState4")
+    page_state_4 = PageStateMachine(all_ui_devices[3], all_ui_devices[3].DeviceAlias)
 
 all_state_machines = [
     state_machine
@@ -208,7 +208,8 @@ def make_str_obj_map(element_list):
     # UI Devices (touch panels) and Processors: Name = DeviceAlias
     # Hardware interface = Name = "Port", ex: "COM1"
     # Ethernet interface = Name = "Hostname"
-    attributes_to_try = ["Name", "DeviceAlias", "Port", "Hostname"]
+    # Page State Machine = Name = "name"
+    attributes_to_try = ["Name", "DeviceAlias", "Port", "Hostname", "name"]
 
     for attr in attributes_to_try:
         try:
@@ -468,7 +469,7 @@ def get_all_elements_():
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
         "all_ethernet_interfaces": str(ETHERNET_INTERFACE_MAP),
-        "all_page_state_machines": [state.Name for state in all_state_machines],
+        "all_page_state_machines": [state.name for state in all_state_machines],
         "backend_server_available": v.backend_server_available,
         "backend_server_role": v.backend_server_role,
         "backend_server_ip": v.backend_server_ip,
@@ -609,9 +610,9 @@ def get_object(string_key, object_map):
     returns a tuple golang style (object, error).
     """
     try:
-        return object_map[string_key], None
+        return (object_map[string_key], None)
     except KeyError:
-        error = "{} not in {}".format(string_key, object_map)
+        error = "{} not in object map".format(string_key)
         log(error, "error")
         return None, error
     except Exception as e:
@@ -735,11 +736,9 @@ def process_rx_data_and_send_reply(json_data, client):
             errors.append("Bare Except: {}".format(str(e)))
 
     if len(errors) == 0:
-        print("results {}".format(results))
         if client:
             client.Send(str(results))
     else:
-        print("errors {}".format(errors))
         if client:
             client.Send(str(errors))
 
