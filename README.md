@@ -144,23 +144,20 @@ For example, the `Label` class has a method called `SetText`.  You would call `S
 
 - `get_property` can return values from the internal page/popup state machine
 
-    State Machine Objects:
-
-  - `page_state_1` for ui_device 1, `page_state_2` for ui_device 2, up to 4 total ui_devices.
-
     PageState Attributes:
-  - `ui_device`: returns the ui_device object attached to the state machine
-  - `current_page`
-  - `current_popup`
-  - `all_pages_called` , all pages called since boot
-  - `all_popups_called`, all popups and modals called since boot
+  - `ui_device`: returns the UI device object attached to the state machine
+  - `name`: name of the UI device DeviceAlias
+  - `current_page`: current page
+  - `current_popup`: current popup (if multiple popups, this is the last one called)
+  - `all_pages_called`:  all pages called since boot
+  - `all_popups_called`: all popups and modals called since boot
 
-    Example to return the current page of the first UI Device:
+    Example to return the current page of a UI device with DeviceAlias of "TouchPanel_1":
 
     ```JSON
     {
         "type": "page_state",
-        "object": "page_state_1",
+        "object": "TouchPanel_1",
         "function": "get_property",
         "arg1": "current_page"
     }
