@@ -206,9 +206,8 @@ def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
     # GUI Object: Name = "Name"
     # UI Devices (touch panels) and Processors: Name = DeviceAlias
-    # Hardware interface = Name = "Port", ex: "COM1"
-    # Ethernet interface = Name = "Hostname"
-    # Page State Machine = Name = "name"
+    # Ports and Devices: Name = "Alias"
+    # Page State Machine: Name = "name"
     attributes_to_try = ["Name", "DeviceAlias", "Port", "Hostname", "name"]
 
     for attr in attributes_to_try:
