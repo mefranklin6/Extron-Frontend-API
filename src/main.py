@@ -137,7 +137,7 @@ class PortInstantiation:
             return
         port = port_definition["Port"]
         alias = port_definition["Alias"]
-        self.all_relays.append(RelayInterfaceEx(host, port, Alias=alias))
+        self.all_relays.append(RelayInterfaceEx(host, port, alias=alias))
 
     def instantiate_serial_interface(self, port_definition):
         host = PROCESSORS_MAP.get(port_definition["Host"], None)
@@ -202,7 +202,11 @@ class PortInstantiation:
             credentials = (username, password)
             self.all_ethernet_interfaces.append(
                 EthernetClientInterfaceEx(
-                    host, ip_port, Protocol=protocol, Credentials=credentials, alias=alias
+                    host,
+                    ip_port,
+                    Protocol=protocol,
+                    Credentials=credentials,
+                    alias=alias,
                 )
             )
 
