@@ -3,16 +3,16 @@ import urllib.error
 import urllib.request
 
 from extronlib import event
-from extronlib.interface import (
-    EthernetClientInterface,
-    EthernetServerInterfaceEx,
-    RelayInterface,
-    SerialInterface,
-)
+from extronlib.interface import EthernetServerInterfaceEx
 from extronlib.system import File as open
 from extronlib.system import Timer, Wait
 
 import variables as v
+from extronlib_extensions import (
+    EthernetClientInterfaceEx,
+    RelayInterfaceEx,
+    SerialInterfaceEx,
+)
 from gui_elements.buttons import all_buttons
 from gui_elements.knobs import all_knobs
 from gui_elements.labels import all_labels
@@ -136,7 +136,8 @@ class PortInstantiation:
             )
             return
         port = port_definition["Port"]
-        self.all_relays.append(RelayInterface(host, port))
+        alias = port_definition["Alias"]
+        self.all_relays.append(RelayInterfaceEx(host, port, Alias=alias))
 
     def instantiate_serial_interface(self, port_definition):
         host = PROCESSORS_MAP.get(port_definition["Host"], None)
@@ -156,8 +157,9 @@ class PortInstantiation:
         parity = port_definition["Parity"]
         flow_control = port_definition["FlowControl"]
         mode = port_definition["Mode"]
+        alias = port_definition["Alias"]
         self.all_serial_interfaces.append(
-            SerialInterface(
+            SerialInterfaceEx(
                 host,
                 port,
                 Baud=baud,
@@ -167,6 +169,7 @@ class PortInstantiation:
                 FlowControl=flow_control,
                 CharDelay=char_delay,
                 Mode=mode,
+                alias=alias,
             )
         )
 
@@ -174,21 +177,23 @@ class PortInstantiation:
         host = port_definition["Hostname"]
         ip_port = int(port_definition["IPPort"])
         protocol = port_definition["Protocol"]
+        alias = port_definition["Alias"]
 
         if protocol == "TCP":
             self.all_ethernet_interfaces.append(
-                EthernetClientInterface(host, ip_port, Protocol=protocol)
+                EthernetClientInterfaceEx(host, ip_port, Protocol=protocol, alias=alias)
             )
         elif protocol == "UDP":
             service_port = port_definition["ServicePort"]
             buffer_size = port_definition["bufferSize"]
             self.all_ethernet_interfaces.append(
-                EthernetClientInterface(
+                EthernetClientInterfaceEx(
                     host,
                     ip_port,
                     Protocol=protocol,
                     ServicePort=int(service_port),
                     bufferSize=int(buffer_size),
+                    alias=alias,
                 )
             )
         elif protocol == "SSH":
@@ -196,8 +201,8 @@ class PortInstantiation:
             password = port_definition["Password"]
             credentials = (username, password)
             self.all_ethernet_interfaces.append(
-                EthernetClientInterface(
-                    host, ip_port, Protocol=protocol, Credentials=credentials
+                EthernetClientInterfaceEx(
+                    host, ip_port, Protocol=protocol, Credentials=credentials, alias=alias
                 )
             )
 
@@ -208,7 +213,12 @@ def make_str_obj_map(element_list):
     # UI Devices (touch panels) and Processors: Name = DeviceAlias
     # Ports and Devices: Name = "Alias"
     # Page State Machine: Name = "name"
-    attributes_to_try = ["Name", "DeviceAlias", "Port", "Hostname", "name"]
+    attributes_to_try = [
+        "Name",
+        "DeviceAlias",
+        "Alias",
+        "name",
+    ]
 
     for attr in attributes_to_try:
         try:
@@ -217,12 +227,12 @@ def make_str_obj_map(element_list):
             continue
         except Exception as e:
             log("Error creating string:object dict: {}".format(str(e)), "error")
-            return None
+            return {}
 
     log(
-        "None of the attributes {} found in elements".format(attributes_to_try), "error"
+        "None of the attributes {} found in {}".format(attributes_to_try, attr), "error"
     )
-    return None
+    return {}
 
 
 # Key: string name, Value: object
