@@ -292,7 +292,7 @@ class PortInstantiationApp:
                 "Error", "Malformed Serial Port: must start with 'COM'."
             )
             return
-        data["Class"] = "SerialInterface"
+        data["Class"] = "SerialInterfaceEx"
         data["Parity"] = self.parity_var.get()
         data["FlowControl"] = self.flowcontrol_var.get()
         data["Mode"] = self.mode_var.get()
@@ -307,7 +307,7 @@ class PortInstantiationApp:
             messagebox.showerror("Error", "Hostname cannot be empty.")
             return
 
-        data["Class"] = "EthernetClientInterface"
+        data["Class"] = "EthernetClientInterfaceEx"
         protocol = self.protocol_var.get()
         data["Protocol"] = protocol
 
@@ -340,7 +340,7 @@ class PortInstantiationApp:
                 "Error", "Malformed Relay Port: must start with 'RLY'."
             )
             return
-        data["Class"] = "RelayInterface"
+        data["Class"] = "RelayInterfaceEx"
         self.json_cache.append(data)
         self.relay_entries["Port"].delete(0, tk.END)
         self.relay_entries["Alias"].delete(0, tk.END)
