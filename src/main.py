@@ -116,11 +116,11 @@ class PortInstantiation:
             return
         for port_definition in self.port_definitions:
             port_class = port_definition["Class"]
-            if port_class == "RelayInterface":
+            if port_class == "RelayInterfaceEx":
                 self.instantiate_relays(port_definition)
-            elif port_class == "SerialInterface":
+            elif port_class == "SerialInterfaceEx":
                 self.instantiate_serial_interface(port_definition)
-            elif port_class == "EthernetClientInterface":
+            elif port_class == "EthernetClientInterfaceEx":
                 self.instantiate_ethernet_client_interface(port_definition)
             else:
                 log("Unknown Port Definition Class: {}".format(port_class), "error")
@@ -215,12 +215,12 @@ def make_str_obj_map(element_list):
     """Creates a dictionary using objects as values and their string names as keys"""
     # GUI Object: Name = "Name"
     # UI Devices (touch panels) and Processors: Name = DeviceAlias
-    # Ports and Devices: Name = "Alias"
+    # Ports and Devices: Name = "alias"
     # Page State Machine: Name = "name"
     attributes_to_try = [
         "Name",
         "DeviceAlias",
-        "Alias",
+        "alias",
         "name",
     ]
 
