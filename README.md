@@ -12,7 +12,6 @@ Physical ports such as relays, serial ports and devices on a processors AVLAN ar
 
 Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
 
-
 ## Reason
 
 Use modern Python, Go, Rust, C#, Java, Javascript, NodeRed or basically any modern language as a backend and extend the useful life and capibility of your hardware.
@@ -128,9 +127,13 @@ The API has been made to mirror existing methods as close as possible.  The para
 
 #### "Objects" are objects that fall in any of the above classes
 
-For processors and touch panels, pass in their `Device Alias` as setup in your standard room configuration JSON file.
+There is a name/alias to object retrevial system where passing in the string representation of the object will return the object
 
-All other objects are referenced by their names that are set in GUI designer.
+- For processors and touch panels, pass in their `Device Alias` as setup in your standard room configuration JSON file.
+
+- If you configured any physical ports or EthernetClientInterfaces, use the alias (friendly name) that you set in the port instantiation tool.
+
+- All other objects are referenced by their names that are set in GUI designer.
 
 #### Most functions are derived from Extron Class methods
 
@@ -173,6 +176,8 @@ For example, the `Label` class has a method called `SetText`.  You would call `S
 
 ### RPC API Examples
 
+> **Note:** You can also pass in a list [] of JSON and the processor will execute the commands in series and return the results in the same order.  This is more resource efficcent when several commands or queries need to be executed at the same time.
+
 To set a button called `Btn_Power` to a state of `1`, you would use the following command structure:
 
 ```JSON
@@ -213,17 +218,27 @@ To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg
 }
 ```
 
-To set a button called `Btn_1` to a medium blink from state 1 to state 2.
-In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the `state_list`
+To set buttons called to a medium blink from state 1 to state 2.
+In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the `state_list`.  The processor will execute both commands in series since they are passed in as a list.
 
 ```JSON
-{
-    "type": "Button",
-    "object": "Btn_1",
-    "function": "SetBlinking",
-    "arg1": "Medium",
-    "arg2": "[1,2]"
-}
+[
+    {
+        "type": "Button",
+        "object": "Btn_1",
+        "function": "SetBlinking",
+        "arg1": "Medium",
+        "arg2": "[1,2]"
+    },
+        {
+        "type": "Button",
+        "object": "Btn_2",
+        "function": "SetBlinking",
+        "arg1": "Medium",
+        "arg2": "[1,2]"
+    }
+
+]
 ```
 
 ### REST API Structure
