@@ -79,22 +79,18 @@ class PageStateMachine:
         self._add_to_all(popup, self.all_popups_called)
 
 
-page_state_1 = PageStateMachine(all_ui_devices[0], all_ui_devices[0].DeviceAlias)
-page_state_2 = None
-page_state_3 = None
-page_state_4 = None
-if len(all_ui_devices) > 1:
-    page_state_2 = PageStateMachine(all_ui_devices[1], all_ui_devices[1].DeviceAlias)
-if len(all_ui_devices) > 2:
-    page_state_3 = PageStateMachine(all_ui_devices[2], all_ui_devices[2].DeviceAlias)
-if len(all_ui_devices) > 3:
-    page_state_4 = PageStateMachine(all_ui_devices[3], all_ui_devices[3].DeviceAlias)
+class PageStateMachineFactory:
+    @staticmethod
+    def create_page_state_machines(ui_devices):
+        page_state_machines = []
+        for ui_device in ui_devices:
+            page_state_machines.append(
+                PageStateMachine(ui_device, ui_device.DeviceAlias)
+            )
+        return page_state_machines
 
-all_state_machines = [
-    state_machine
-    for state_machine in [page_state_1, page_state_2, page_state_3, page_state_4]
-    if state_machine is not None
-]
+
+all_state_machines = PageStateMachineFactory.create_page_state_machines(all_ui_devices)
 
 
 class PortInstantiation:
@@ -337,38 +333,17 @@ def show_popup(ui_device, popup, duration=None):
         ui_device.ShowPopup(popup)  # Default indefinite popup
     else:
         ui_device.ShowPopup(popup, int(duration))
-    if ui_device == all_ui_devices[0]:
-        page_state_1.show_popup(popup, duration)
-    elif ui_device == all_ui_devices[1]:
-        page_state_2.show_popup(popup, duration)
-    elif ui_device == all_ui_devices[2]:
-        page_state_3.show_popup(popup, duration)
-    elif ui_device == all_ui_devices[3]:
-        page_state_4.show_popup(popup, duration)
+    PAGE_STATES_MAP[str(ui_device)].show_popup(popup, duration)
 
 
 def hide_all_popups(ui_device):
     ui_device.HideAllPopups()
-    if ui_device == all_ui_devices[0]:
-        page_state_1.hide_all_popups()
-    elif ui_device == all_ui_devices[1]:
-        page_state_2.hide_all_popups()
-    elif ui_device == all_ui_devices[2]:
-        page_state_3.hide_all_popups()
-    elif ui_device == all_ui_devices[3]:
-        page_state_4.hide_all_popups()
+    PAGE_STATES_MAP[str(ui_device)].hide_all_popups()
 
 
 def show_page(ui_device, page):
     ui_device.ShowPage(page)
-    if ui_device == all_ui_devices[0]:
-        page_state_1.set_page(page)
-    elif ui_device == all_ui_devices[1]:
-        page_state_2.set_page(page)
-    elif ui_device == all_ui_devices[2]:
-        page_state_3.set_page(page)
-    elif ui_device == all_ui_devices[3]:
-        page_state_4.set_page(page)
+    PAGE_STATES_MAP[str(ui_device)].set_page(page)
 
 
 def get_volume(obj, name):
