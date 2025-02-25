@@ -600,7 +600,7 @@ def get_object(string_key, object_map):
     try:
         return (object_map[string_key], None)
     except KeyError:
-        error = "{} not in object map".format(string_key)
+        error = "Object not found: {}".format(string_key)
         log(error, "error")
         return None, error
     except Exception as e:
@@ -628,7 +628,7 @@ def method_call_handler(data):
         object_type_map = DOMAIN_CLASS_MAP[type_str]
         obj, err = get_object(object_str, object_type_map)
         if err != None:
-            return err
+            return (None, err)
 
         func = METHODS_MAP[function_str]
         args = [arg for arg in [arg1, arg2, arg3] if arg not in ["", None]]
