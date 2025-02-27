@@ -723,7 +723,7 @@ def process_rx_data_and_send_reply(json_data, client):
         except Exception as e:
             errors.append("Bare Except: {}".format(str(e)))
 
-    if len(errors) == 0:
+    if len(errors) == 0 and len(results) > 0:
         if client:
             client.Send(str(results))
     else:
