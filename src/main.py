@@ -35,64 +35,6 @@ def load_json(path):
 config = load_json("config.json")
 
 
-class PageStateMachine:
-    """
-    Extron libs do not have the ability to query
-    all possible pages and popups, nor do they have properties
-    that contain current visible pages and popups.
-    We track state here and store all unique pages and popups called
-    """
-
-    def __init__(self, ui_device, name):
-        self.ui_device = str(ui_device)
-        self.name = name
-
-        self.current_page = "unknown"
-        self.current_popup = "unknown"  # includes modals
-
-        # Collect all pages and popups that have been called,
-        # to try and track all possibilities
-        self.all_pages_called = []
-        self.all_popups_called = []  # includes modals
-
-    def _add_to_all(self, element, element_type_list):
-        if element not in element_type_list:
-            element_type_list.append(element)
-
-    def _reset_popup(self):
-        self.current_popup = "none"
-
-    def hide_all_popups(self):
-        self.current_popup = "none"
-
-    def set_page(self, page):
-        self.current_page = page
-        self._add_to_all(page, self.all_pages_called)
-
-    def show_popup(self, popup, duration=None):
-        if duration is None:
-            self.current_popup = popup
-        else:
-            self.current_popup = popup
-            Wait(float(duration), self._reset_popup)
-
-        self._add_to_all(popup, self.all_popups_called)
-
-
-class PageStateMachineFactory:
-    @staticmethod
-    def create_page_state_machines(ui_devices):
-        page_state_machines = []
-        for ui_device in ui_devices:
-            page_state_machines.append(
-                PageStateMachine(ui_device, ui_device.DeviceAlias)
-            )
-        return page_state_machines
-
-
-all_state_machines = PageStateMachineFactory.create_page_state_machines(all_ui_devices)
-
-
 class PortInstantiation:
     """
     Instantiates all ports defined in ports.json
@@ -212,12 +154,10 @@ def make_str_obj_map(element_list):
     # GUI Object: Name = "Name"
     # UI Devices (touch panels) and Processors: Name = DeviceAlias
     # Ports and Devices: Name = "alias"
-    # Page State Machine: Name = "name"
     attributes_to_try = [
         "Name",
         "DeviceAlias",
         "alias",
-        "name",
     ]
 
     for attr in attributes_to_try:
@@ -251,10 +191,6 @@ RELAYS_MAP = make_str_obj_map(ports.all_relays)
 SERIAL_INTERFACE_MAP = make_str_obj_map(ports.all_serial_interfaces)
 ETHERNET_INTERFACE_MAP = make_str_obj_map(ports.all_ethernet_interfaces)
 
-## Custom Classes ##
-PAGE_STATES_MAP = make_str_obj_map(all_state_machines)
-
-
 DOMAIN_CLASS_MAP = {
     ## Standard Extron Classes ##
     "ProcessorDevice": PROCESSORS_MAP,
@@ -267,8 +203,6 @@ DOMAIN_CLASS_MAP = {
     "RelayInterface": RELAYS_MAP,
     "SerialInterface": SERIAL_INTERFACE_MAP,
     "EthernetClientInterface": ETHERNET_INTERFACE_MAP,
-    ## Custom Classes ##
-    "page_state": PAGE_STATES_MAP,
 }
 
 
@@ -333,17 +267,14 @@ def show_popup(ui_device, popup, duration=None):
         ui_device.ShowPopup(popup)  # Default indefinite popup
     else:
         ui_device.ShowPopup(popup, int(duration))
-    PAGE_STATES_MAP[str(ui_device)].show_popup(popup, duration)
 
 
 def hide_all_popups(ui_device):
     ui_device.HideAllPopups()
-    PAGE_STATES_MAP[str(ui_device)].hide_all_popups()
 
 
 def show_page(ui_device, page):
     ui_device.ShowPage(page)
-    PAGE_STATES_MAP[str(ui_device)].set_page(page)
 
 
 def get_volume(obj, name):
@@ -457,7 +388,6 @@ def get_all_elements_():
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
         "all_ethernet_interfaces": str(ETHERNET_INTERFACE_MAP),
-        "all_page_state_machines": [state.name for state in all_state_machines],
         "backend_server_available": v.backend_server_available,
         "backend_server_role": v.backend_server_role,
         "backend_server_ip": v.backend_server_ip,
@@ -484,7 +414,8 @@ def set_backend_server_(ip=None):
         v.backend_server_ip = None
         log(message, "error")
         for ui_device in all_ui_devices:
-            ui_device.ShowPage("NoBackendServer")
+            offline_page = ui_device._offlinePage().strip()
+            ui_device.ShowPage(int(offline_page))
 
     if ip:  # Custom IP specified
         if backend_server_ok(ip):
