@@ -413,9 +413,6 @@ def set_backend_server_(ip=None):
         v.backend_server_role = "none"
         v.backend_server_ip = None
         log(message, "error")
-        for ui_device in all_ui_devices:
-            offline_page = ui_device._offlinePage().strip()
-            ui_device.ShowPage(int(offline_page))
 
     if ip:  # Custom IP specified
         if backend_server_ok(ip):
