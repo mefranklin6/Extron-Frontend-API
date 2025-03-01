@@ -77,12 +77,9 @@ all_buttons = [
 
 > **Note:** If you are converting an existing project, you can use the included `gui_element_instantiation_converter.py` script to automatically populate the above lists from your old files.
 
-
 5. If you need to use any relay, serial, or AVLAN devices, run `port_instantiation_helper.py` on a PC.  This provides you with a graphical interface and an easy way to add devices and export the resulting JSON file.
 
-
 ![port_instantiation_helper](https://github.com/user-attachments/assets/95d95af2-ee8a-464a-865d-f18902125bee)
-
 
 6. Deploy as normal using CSDU.  Re-deploy if you update your GUI Designer File or if you change hardware.
 
@@ -123,7 +120,6 @@ The API has been made to mirror existing methods as close as possible.  The para
 - `RelayInterface`
 - `SerialInterface`
 - `EthernetClientInterface` (intended for AVLAN)
-- `page_state` (custom class)
 
 #### "Objects" are objects that fall in any of the above classes
 
@@ -141,28 +137,25 @@ For example, the `Label` class has a method called `SetText`.  You would call `S
 
 #### Additional functions which have been added
 
-*Hint: Built-in ECS functionality uses the same `PascalCase` as written by Extron.  Additional methods, macros or classes added in this project use `snake_case`.*
+*Hint: Built-in documented ECS functionality uses the same `PascalCase` as written by Extron (
+while their undocumented private methods that we use often are in `_camelCase`).  Additional methods, macros or properties which are origional to this project use PEP8 `snake_case`.*
 
 - `get_property` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron ControlScript® documentation.
 
-- `get_property` can return values from the internal page/popup state machine
-
-    PageState Attributes:
-  - `ui_device`: returns the UI device object attached to the state machine
-  - `name`: name of the UI device DeviceAlias
-  - `current_page`: current page
-  - `current_popup`: current popup (if multiple popups, this is the last one called)
-  - `all_pages_called`:  all pages called since boot
-  - `all_popups_called`: all popups and modals called since boot
+  - Note the undocumented "private" properties of `UIDevice` class below can prove helpful
+    - `_pages` returns a dictionary of {"PageID":"PageName",} for the .gdl file
+    - `_popups` returns a dictionary of dictionaries with all the attributes of the systems popups
+    - `_currPage` returns the ID of the current page shown.  Use `_pages` to find the name of the page if needed
+    - `_visiblePopups` returns a tuple of ('I', [list of popup id's]).  As with pages, you can corelate the results of `_popups` with the ID to find the name of the popup.
 
     Example to return the current page of a UI device with DeviceAlias of "TouchPanel_1":
 
     ```JSON
     {
-        "type": "page_state",
+        "type": "UIDevice",
         "object": "TouchPanel_1",
         "function": "get_property",
-        "arg1": "current_page"
+        "arg1": "_currPage"
     }
     ```
 
@@ -241,6 +234,12 @@ In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the
 ]
 ```
 
+### RPC API Return Values
+
+The RPC API server only runs HTTP 0.9, so we embed HTTP status codes in the response body.  If the response body includes data, the status code and data will be seperated by a pipe `[200 OK | <data here if any>]`.  
+
+The response from the processor is always in the form of a list.  If a list of commands was sent to the processor, a list of results will be returned in the same order. (Command execution by list is blocking, and the return message will include the results of all of the actions at once once after all of them have been completed, so be careful for any commands that may cause an issue!)
+
 ### REST API Structure
 
 The processor will send user interaction events with the following structure:
@@ -271,9 +270,7 @@ The processor will then wait for an immidate reply, which could be instructions 
 
 ## Known Issues
 
-- Calling "ShowPopup" with an invalid popup name will not return an error  This may be a limitation of extronlib.  As a result, the page state machine will be wrong and the touch panel may not be in the desired state.  The error is written to the program log though.  Workaround: check the program log for errors and make sure you're calling valid popup names.
-
-- All other issues and the roadmap for future releases is in the Github issue tracker.
+All issues and the roadmap for future releases is in the Github issue tracker.
 
 ## FAQ
 
