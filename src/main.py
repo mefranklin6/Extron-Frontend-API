@@ -154,10 +154,12 @@ def make_str_obj_map(element_list):
     # GUI Object: Name = "Name"
     # UI Devices (touch panels) and Processors: Name = DeviceAlias
     # Ports and Devices: Name = "alias"
+    # PopupPageValidator: Name = "ui_device_name"
     attributes_to_try = [
         "Name",
         "DeviceAlias",
         "alias",
+        "ui_device_name",
     ]
 
     for attr in attributes_to_try:
@@ -175,6 +177,69 @@ def make_str_obj_map(element_list):
     return {}
 
 
+class PopupPageValidator:
+    """
+    Ensures popup and page names are valid for a given UI device
+
+    Needed because ShowPopup and ShowPage methods do not return errors
+    """
+
+    def __init__(self, ui_device):
+        self.ui_device = ui_device
+        self.ui_device_name = ui_device.DeviceAlias
+        self.valid_popups = getattr(self.ui_device, "_popups")
+        self.valid_pages = getattr(self.ui_device, "_pages")
+
+    def _is_valid_popup_integer(self, popup):
+        try:
+            popup_int = int(popup)
+        except ValueError as e:
+            # Not an integer
+            return False
+        if popup_int == 65535:
+            raise ValueError("Invalid popup: 'Offline Page' can not be called")
+        if popup_int in self.valid_popups.keys():
+            return True
+        raise ValueError("Invalid popup integer: {}".format(popup))
+
+    def _is_valid_string_popup(self, popup_str):
+        if popup_str == "Offline Page":
+            raise ValueError("Invalid popup: 'Offline Page' can not be called")
+        for value in self.valid_popups.values():
+            for sub_key in value:
+                if sub_key == "name" and value[sub_key] == popup_str:
+                    return True
+        raise ValueError("Invalid popup string: {}".format(popup_str))
+
+    def validated_popup_call(self, popup):
+        """
+        Returns the proper way to call the popup
+        if the popup is valid, otherwise returns None
+        """
+        if self._is_valid_popup_integer(popup):
+            return int(popup)
+        elif self._is_valid_string_popup(popup):
+            return popup
+        else:
+            return None
+
+    def validated_page_call(self, page):
+        # TODO: Implement page validation
+        return page
+
+
+class PopupPageValidatorFactory:
+    @staticmethod
+    def create(ui_devices):
+        validators = []
+        for ui_device in ui_devices:
+            validators.append(PopupPageValidator(ui_device))
+        return validators
+
+
+all_popup_page_validators = PopupPageValidatorFactory.create(all_ui_devices)
+
+
 # Key: string name, Value: object
 ## Standard Extron Classes ##
 PROCESSORS_MAP = make_str_obj_map(all_processors)
@@ -190,6 +255,11 @@ ports = PortInstantiation()
 RELAYS_MAP = make_str_obj_map(ports.all_relays)
 SERIAL_INTERFACE_MAP = make_str_obj_map(ports.all_serial_interfaces)
 ETHERNET_INTERFACE_MAP = make_str_obj_map(ports.all_ethernet_interfaces)
+
+## Custom Classes ##
+ALL_POPUP_PAGE_VALIDATORS = make_str_obj_map(all_popup_page_validators)
+
+####
 
 DOMAIN_CLASS_MAP = {
     ## Standard Extron Classes ##
@@ -263,10 +333,18 @@ def set_enable(obj, enabled):
 
 
 def show_popup(ui_device, popup, duration=None):
+    validator, err = get_object(ui_device.DeviceAlias, ALL_POPUP_PAGE_VALIDATORS)
+    if err is not None:
+        return err
+
+    popup_call = validator.validated_popup_call(popup)
+    if popup_call is None:
+        return "Invalid popup: {}".format(popup)
+
     if duration is None:
-        ui_device.ShowPopup(popup)  # Default indefinite popup
+        ui_device.ShowPopup(popup_call)  # Default indefinite popup
     else:
-        ui_device.ShowPopup(popup, int(duration))
+        ui_device.ShowPopup(popup_call, int(duration))
 
 
 def hide_all_popups(ui_device):
@@ -564,12 +642,16 @@ def method_call_handler(data):
         if result is None:
             return ("200 OK", None)
         return ("200 OK | {}".format(str(result)), None)
+    except ValueError as e:
+        err = "400 Bad Request | Value Error: {}".format(str(e))
+        log(str(err), "error")
+        return None, err
     except Exception as e:
-        error = "400 Bad Request | Function Error: {} | with data {}".format(
+        err = "400 Bad Request | Function Error: {} | with data {}".format(
             str(e), str(data)
         )
-        log(str(error), "error")
-        return None, error
+        log(str(err), "error")
+        return None, err
 
 
 def macro_call_handler(command_type, data_dict=None):
@@ -771,13 +853,13 @@ def handle_rpc_client_connect(client, state):
 
 @event(rpc_serv, "Disconnected")
 def handle_rpc_client_disconnect(client, state):
-    log("Server/Client {} disconnected.".format(client.IPAddress), "info")
+    pass
+    # log("Server/Client {} disconnected.".format(client.IPAddress), "info")
 
 
 def Initialize():
     set_ntp(config["ntp_primary"], config["ntp_secondary"])
     set_backend_server_()  # Using addresses from config.json
-
     log("Initialized", "info")
 
 
