@@ -642,14 +642,16 @@ def method_call_handler(data):
         if result is None:
             return ("200 OK", None)
         return ("200 OK | {}".format(str(result)), None)
+    except KeyError as e:
+        err = "400 Bad Request | Key Error: {}".format(str(e))
+        log(str(err), "error")
+        return None, err
     except ValueError as e:
         err = "400 Bad Request | Value Error: {}".format(str(e))
         log(str(err), "error")
         return None, err
     except Exception as e:
-        err = "400 Bad Request | Function Error: {} | with data {}".format(
-            str(e), str(data)
-        )
+        err = "400 Bad Request | Function Error: {}".format(str(e))
         log(str(err), "error")
         return None, err
 
