@@ -202,7 +202,7 @@ class PopupPageValidator:
             return True
         raise ValueError("Invalid popup integer: {}".format(popup))
 
-    def _is_valid_string_popup(self, popup_str):
+    def _is_valid_popup_string(self, popup_str):
         if popup_str == "Offline Page":
             raise ValueError("Invalid popup: 'Offline Page' can not be called")
         for value in self.valid_popups.values():
@@ -211,6 +211,21 @@ class PopupPageValidator:
                     return True
         raise ValueError("Invalid popup string: {}".format(popup_str))
 
+    def _is_valid_page_integer(self, page):
+        try:
+            page_int = int(page)
+        except ValueError as e:
+            # Not an integer
+            return False
+        if page_int in self.valid_pages.keys():
+            return True
+        raise ValueError("Invalid page integer: {}".format(page))
+
+    def _is_valid_page_string(self, page_str):
+        if page_str in self.valid_pages.values():
+            return True
+        return False
+
     def validated_popup_call(self, popup):
         """
         Returns the proper way to call the popup
@@ -218,14 +233,22 @@ class PopupPageValidator:
         """
         if self._is_valid_popup_integer(popup):
             return int(popup)
-        elif self._is_valid_string_popup(popup):
+        elif self._is_valid_popup_string(popup):
             return popup
         else:
             return None
 
     def validated_page_call(self, page):
-        # TODO: Implement page validation
-        return page
+        """
+        Returns the proper way to call the page
+        if the page is valid, otherwise returns None
+        """
+        if self._is_valid_page_integer(page):
+            return int(page)
+        elif self._is_valid_page_string(page):
+            return page
+        else:
+            return None
 
 
 class PopupPageValidatorFactory:
@@ -352,7 +375,13 @@ def hide_all_popups(ui_device):
 
 
 def show_page(ui_device, page):
-    ui_device.ShowPage(page)
+    validator, err = get_object(ui_device.DeviceAlias, ALL_POPUP_PAGE_VALIDATORS)
+    if err is not None:
+        return err
+    page_call = validator.validated_page_call(page)
+    if page_call is None:
+        return "Invalid page: {}".format(page)
+    ui_device.ShowPage(page_call)
 
 
 def get_volume(obj, name):
