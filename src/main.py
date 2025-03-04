@@ -595,7 +595,8 @@ def send_client_error(client, code, description):
     formatted = "{} | {}".format(prefix, description)
     log(formatted, "error")
     if client:
-        client.Send(formatted)
+        client.Send(formatted.encode("utf-8"))
+        client.Disconnect()
 
 
 def get_object(string_key, object_map):
@@ -680,67 +681,78 @@ def macro_call_handler(command_type, data_dict=None):
         return (None, "Macro: {} Not Found".format(command_type))
 
 
-def process_rx_data_and_send_reply(json_data, client):
-    # Client is only present when function is called from RPC server
-    # Function does not send replies when invoked as a REST API reply processor
-    try:
-        data = json.loads(json_data)
-    except (json.JSONDecodeError, KeyError) as e:
-        send_client_error(client, "400", "Error decoding JSON: {}".format(str(e)))
-        return
+class RxDataReplyProcessor:
 
-    # Make compatible with list processing below
-    if isinstance(data, dict):
-        data = [data]
+    def __init__(self, json_data, client):
+        self.json_data = json_data
+        # client is only present when function is called from RPC server
+        # No replies sent when invoked as a REST API reply processor
+        self.client = client
+        self.valid_json = self._validate_json()
 
-    if not isinstance(data, list):
-        send_client_error(
-            client,
-            "400",
-            "Data type must be interpreted as list or dict. Found {}".format(
-                type(data)
-            ),
-        )
-        return
+        self.successes = 0
+        self.errors = 0
+        self.ordered_reply = []
 
-    errors = []
-    results = []
-
-    for command in data:
+    def _validate_json(self):
         try:
+            data = json.loads(self.json_data)
+        except (json.JSONDecodeError, KeyError) as e:
+            send_client_error(
+                self.client, "400", "Error decoding JSON: {}".format(str(e))
+            )
+            return None
+
+        # Make compatible with list processing
+        if isinstance(data, dict):
+            data = [data]
+
+        if not isinstance(data, list):
+            send_client_error(
+                self.client,
+                "400",
+                "Data type must be interpreted as list or dict. Found {}".format(
+                    type(data)
+                ),
+            )
+            return None
+        return data
+
+    def _cache_result(self, success: bool, result):
+        if success:
+            self.successes += 1
+        else:
+            self.errors += 1
+        self.ordered_reply.append(result)
+
+    def process_and_send(self):
+        if not self.valid_json:
+            raise json.JSONDecodeError
+
+        for command in self.valid_json:
             command_type = command["type"]
             if command_type in DOMAIN_CLASS_MAP.keys():
                 result, err = method_call_handler(command)
-                if err != None:
-                    errors.append(err)
+                if err is not None:
+                    self._cache_result(False, err)
                 else:
-                    results.append(result)
+                    self._cache_result(True, result)
                 continue
 
             elif command_type in MACROS_MAP.keys():
-                if not client:
+                if not self.client:
                     raise Exception("Macro command called without client")
                 result, err = macro_call_handler(command_type, command)
-                if err != None:
-                    errors.append(err)
-                else:
-                    results.append(result)
+                success = False if err is not None else True
+                self._cache_result(success, result)
                 continue
 
             else:
-                errors.append("Unknown Action: {}".format(str(command_type)))
-
-        except KeyError as e:
-            errors.append("Key Error: {}".format(str(e)))
-        except Exception as e:
-            errors.append("Bare Except: {}".format(str(e)))
-
-    if len(errors) == 0 and len(results) > 0:
-        if client:
-            client.Send(str(results))
-    else:
-        if client:
-            client.Send(str(errors))
+                self.ordered_reply.append(
+                    "400 Bad Request | Unknown Action: {}".format(str(command_type))
+                )
+        response = json.dumps(self.ordered_reply).encode("utf-8")
+        self.client.Send(response)
 
 
 def handle_backend_server_timeout():
@@ -783,7 +795,8 @@ def send_to_backend_server(user_data_req):
                 user_data_req, timeout=int(config["backend_server_timeout"])
             ) as response:
                 response_data = response.read().decode()
-                process_rx_data_and_send_reply(response_data, None)
+                reply_processor = RxDataReplyProcessor(response_data, None)
+                reply_processor.process_and_send()
 
         # Timeout
         except urllib.error.URLError as e:
@@ -837,7 +850,8 @@ def handle_unsolicited_rpc_rx(client, data):
         )
     finally:
         if body:
-            process_rx_data_and_send_reply(body, client)
+            reply_processor = RxDataReplyProcessor(body, client)
+            reply_processor.process_and_send()
         else:
             log("No data received", "error")
         client.Disconnect()
