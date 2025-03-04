@@ -5,7 +5,7 @@ import urllib.request
 from extronlib import event
 from extronlib.interface import EthernetServerInterfaceEx
 from extronlib.system import File as open
-from extronlib.system import Timer, Wait
+from extronlib.system import Timer, Wait, SaveProgramLog
 
 import variables as v
 from extronlib_extensions import (
@@ -462,6 +462,13 @@ def stop_keepalive(obj):
     obj.StopKeepAlive()
 
 
+def save_program_log(obj, filepath):
+    # Saving is always done to the primary processor storage,
+    # so therefore object is not used, but kept for convention.
+    with open(filepath, "w") as f:
+        SaveProgramLog(f)
+
+
 ## Custom Methods ##
 
 
@@ -586,6 +593,7 @@ METHODS_MAP = {
     "Disconnect": disconnect,
     "StartKeepAlive": start_keepalive,
     "StopKeepAlive": stop_keepalive,
+    "SaveProgramLog": save_program_log,
     "get_property": get_property_,
 }
 
