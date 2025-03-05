@@ -358,11 +358,11 @@ def set_enable(obj, enabled):
 def show_popup(ui_device, popup, duration=None):
     validator, err = get_object(ui_device.DeviceAlias, ALL_POPUP_PAGE_VALIDATORS)
     if err is not None:
-        return err
+        raise Exception(err)
 
     popup_call = validator.validated_popup_call(popup)
     if popup_call is None:
-        return "Invalid popup: {}".format(popup)
+        raise ValueError("Invalid popup: {}".format(popup))
 
     if duration is None:
         ui_device.ShowPopup(popup_call)  # Default indefinite popup
@@ -377,10 +377,10 @@ def hide_all_popups(ui_device):
 def show_page(ui_device, page):
     validator, err = get_object(ui_device.DeviceAlias, ALL_POPUP_PAGE_VALIDATORS)
     if err is not None:
-        return err
+        raise Exception(err)
     page_call = validator.validated_page_call(page)
     if page_call is None:
-        return "Invalid page: {}".format(page)
+        raise ValueError("Invalid page: {}".format(page))
     ui_device.ShowPage(page_call)
 
 
@@ -644,13 +644,13 @@ def get_object(string_key, object_map):
     try:
         return (object_map[string_key], None)
     except KeyError:
-        error = "Object not found: {}".format(string_key)
-        log(error, "error")
-        return None, error
+        err = "400 Bad Request | Object not found: {}".format(string_key)
+        log(err, "error")
+        return None, err
     except Exception as e:
-        error = "GetObject bare exception: {}".format(str(e))
-        log(error, "error")
-        return None, error
+        err = "400 Bad Request | GetObject bare exception: {}".format(str(e))
+        log(err, "error")
+        return None, err
 
 
 def method_call_handler(data):
