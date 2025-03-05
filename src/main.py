@@ -5,7 +5,7 @@ import urllib.request
 from extronlib import event
 from extronlib.interface import EthernetServerInterfaceEx
 from extronlib.system import File as open
-from extronlib.system import Timer, Wait, SaveProgramLog
+from extronlib.system import SaveProgramLog, Timer, Wait
 
 import variables as v
 from extronlib_extensions import (
@@ -896,24 +896,23 @@ def handle_unsolicited_rpc_rx(client, data):
 
 @event(rpc_serv, "Connected")
 def handle_rpc_client_connect(client, state):
-    # log("Client connected ({}).".format(client.IPAddress), "info")
-    # client.Send(b"Connected\n")
-    # Log the state to see if any data is sent on connection
-    # log("Connection state: {}".format(state), "info")
-    # TODO: Debug mode
+    # you can use 'client.IPAddress' to implement IP filtering
+    # to only allow authorized clients or subnets to connect
     pass
 
 
-@event(rpc_serv, "Disconnected")
-def handle_rpc_client_disconnect(client, state):
-    pass
-    # log("Server/Client {} disconnected.".format(client.IPAddress), "info")
+class Initialize:
+    @Wait(0)
+    def _set_ntp():
+        set_ntp(config["ntp_primary"], config["ntp_secondary"])
+        log("NTP Complete (success or failure)", "info")
+        steps_taken += 1
 
-
-def Initialize():
-    set_ntp(config["ntp_primary"], config["ntp_secondary"])
-    set_backend_server_()  # Using addresses from config.json
-    log("Initialized", "info")
+    @Wait(0)
+    def _set_backend_server():
+        set_backend_server_()  # Using addresses from config.json
+        log("Backend Server Connection Complete (success or timeout)", "info")
+        steps_taken += 1
 
 
 Initialize()
