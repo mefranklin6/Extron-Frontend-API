@@ -879,18 +879,18 @@ def handle_unsolicited_rpc_rx(client, data):
         else:
             body = ""
     except json.JSONDecodeError as e:
-        log("JSON Decode Error on RPC Rx: {}".format(str(e)), "error")
+        err = "400 Bad Request | JSON Decode Error on RPC Rx: {}".format(str(e))
+        log(err, "error")
     except Exception as e:
-        log(
-            "Bare Exception in RPC Rx: {}".format(str(e)),
-            "error",
-        )
+        err = "Bare Exception in RPC Rx: {}".format(str(e))
+        log(err, "error")
     finally:
         if body:
             reply_processor = RxDataReplyProcessor(body, client)
             reply_processor.process_and_send()
         else:
-            log("No data received", "error")
+            if err:
+                send_client_error(client, "400", err)
         client.Disconnect()
 
 
