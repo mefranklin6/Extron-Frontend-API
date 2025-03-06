@@ -799,7 +799,12 @@ class RxDataReplyProcessor:
             raise json.JSONDecodeError
 
         for command in self.valid_json:
-            command_type = command["type"]
+            command_type = command.get("type", None)
+            if not command_type:
+                self._cache_result(
+                    False, "400 Bad Request | Missing required key 'type'"
+                )
+                continue
             if command_type in DOMAIN_CLASS_MAP.keys():
                 result, err = method_call_handler(command)
                 if err is not None:
