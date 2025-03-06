@@ -906,13 +906,11 @@ class Initialize:
     def _set_ntp():
         set_ntp(config["ntp_primary"], config["ntp_secondary"])
         log("NTP Complete (success or failure)", "info")
-        steps_taken += 1
 
     @Wait(0)
     def _set_backend_server():
         set_backend_server_()  # Using addresses from config.json
         log("Backend Server Connection Complete (success or timeout)", "info")
-        steps_taken += 1
 
 
 Initialize()
