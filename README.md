@@ -135,7 +135,7 @@ There is a name/alias to object retrevial system where passing in the string rep
 
 For example, the `Label` class has a method called `SetText`.  You would call `SetText` as the function in the API.
 
-#### Additional functions which have been added
+### Additional functions which have been added
 
 *Hint: Built-in documented ECS functionality uses the same `PascalCase` as written by Extron (
 while their undocumented private methods that we use often are in `_camelCase`).  Additional methods, macros or properties which are origional to this project use PEP8 `snake_case`.*
@@ -161,10 +161,20 @@ while their undocumented private methods that we use often are in `_camelCase`).
 
 - `get_all_elements` with no additional arguments will return names of all objects in the system, including processors, UI devices, buttons, sliders, popups, etc.
 
+    ```JSON
+    {"type": "get_all_elements"}
+    ```
+
 - `set_backend_server` will change the backend server that the processor sends user interactions to.  This is only intended to be used in case of server failure or temporary migration as the processor will try servers in the config.json first (and will fall back to the config.json servers upon processor reboot or power failure).  Example:
 
     ```JSON
     {"type": "set_backend_server", "ip": "http://10.0.0.1:8080"}
+    ```
+
+- `program_log_saver`: written by Jean-Luc Rioux, will continually write your program log to disk when enabled.  The feature is disabled by default unless you specify `"log_to_disk": true"` in `config.json` or use the RPC API:
+
+    ```JSON
+    {"type": "program_log_saver", "enabled": "true"}
     ```
 
 ### RPC API Examples
