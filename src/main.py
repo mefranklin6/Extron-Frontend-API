@@ -826,7 +826,7 @@ class RxDataReplyProcessor:
                     "400 Bad Request | Unknown Action: {}".format(str(command_type))
                 )
         response = json.dumps(self.ordered_reply).encode("utf-8")
-        if response:
+        if response is not None and self.client is not None:
             self.client.Send(response)
 
 
