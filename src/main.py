@@ -42,6 +42,7 @@ if log_to_disk:
     from utils import ProgramLogSaver
 
     ProgramLogSaver.EnableProgramLogSaver()
+    v.program_log_saver = "Enabled"
 
 
 class PortInstantiation:
@@ -571,6 +572,21 @@ def set_backend_server_(ip=None):
         return "502 Bad Gateway | No backend servers available"
 
 
+def program_log_saver_enable_disable(enabled: bool):
+    if string_to_bool(enabled):
+        if v.program_log_saver == "Enabled":
+            return "200 OK | Program Log Saver is already enabled"
+        ProgramLogSaver.EnableProgramLogSaver()
+        v.program_log_saver = "Enabled"
+        return "200 OK | Program Log will be continually saved to disk"
+    else:
+        if v.program_log_saver == "Disabled":
+            return "200 OK | Program Log Saver is already disabled"
+        ProgramLogSaver.DisableProgramLogSaver()
+        v.program_log_saver = "Disabled"
+        return "200 OK | Program Log will no longer save to disk"
+
+
 METHODS_MAP = {
     # All 'methods' take "type", "object", "function" as required arguments
     # and "arg1", "arg2", "arg3" as optional arguments.
@@ -609,6 +625,7 @@ METHODS_MAP = {
 MACROS_MAP = {
     "get_all_elements": get_all_elements_,
     "set_backend_server": set_backend_server_,
+    "program_log_saver": program_log_saver_enable_disable,
 }
 
 #### User interaction events ####
@@ -720,6 +737,13 @@ def macro_call_handler(command_type, data_dict=None):
         try:
             ip = data_dict.get("ip", None)
             result = set_backend_server_(ip)
+            return (result, None)
+        except Exception as e:
+            return (None, e)
+    elif command_type == "program_log_saver":
+        try:
+            enabled = data_dict.get("enabled", None)
+            result = program_log_saver_enable_disable(enabled)
             return (result, None)
         except Exception as e:
             return (None, e)
