@@ -19,7 +19,7 @@ from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
 from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
-from utils import backend_server_ok, log, set_ntp
+from utils import backend_server_ok, log, set_ntp, ProgramLogSaver
 
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
 
@@ -39,10 +39,9 @@ if not config:
 
 log_to_disk = config.get("log_to_disk", False)
 if log_to_disk:
-    from utils import ProgramLogSaver
-
     ProgramLogSaver.EnableProgramLogSaver()
     v.program_log_saver = "Enabled"
+    log("Enabling Program Log Saver", "info")
 
 
 class PortInstantiation:
@@ -742,7 +741,7 @@ def macro_call_handler(command_type, data_dict=None):
             return (None, e)
     elif command_type == "program_log_saver":
         try:
-            enabled = data_dict.get("enabled", None)
+            enabled = data_dict["enabled"]
             result = program_log_saver_enable_disable(enabled)
             return (result, None)
         except Exception as e:
@@ -822,7 +821,8 @@ class RxDataReplyProcessor:
                     "400 Bad Request | Unknown Action: {}".format(str(command_type))
                 )
         response = json.dumps(self.ordered_reply).encode("utf-8")
-        self.client.Send(response)
+        if response:
+            self.client.Send(response)
 
 
 def handle_backend_server_timeout():
