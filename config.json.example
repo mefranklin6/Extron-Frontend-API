@@ -6,4 +6,5 @@
     "ntp_secondary": "pool.ntp.org",
     "rpc_server_port": 8080,
     "rpc_server_interface": "LAN"
+    "log_to_disk": false
 }

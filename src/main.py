@@ -33,6 +33,15 @@ def load_json(path):
 
 
 config = load_json("config.json")
+if not config:
+    log("Config file not found", "error")
+    raise FileNotFoundError("Config file not found")
+
+log_to_disk = config.get("log_to_disk", False)
+if log_to_disk:
+    from utils import ProgramLogSaver
+
+    ProgramLogSaver.EnableProgramLogSaver()
 
 
 class PortInstantiation:
