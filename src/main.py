@@ -526,13 +526,13 @@ def set_backend_server_(ip=None):
     """
 
     def _set_server(role, ip, message, log_level):
-        v.backend_server_available = True
+        backend_server_available_setter(True)
         v.backend_server_role = role
         v.backend_server_ip = ip
         log(message, log_level)
 
     def _no_server(message):
-        v.backend_server_available = False
+        backend_server_available_setter(False)
         v.backend_server_role = "none"
         v.backend_server_ip = None
         log(message, "error")
@@ -646,6 +646,14 @@ def any_slider_changed(slider, action, value):
 
 
 #### Internal Functions ####
+
+
+def backend_server_available_setter(status):
+    v.backend_server_available = status
+    if status == True:
+        pass  # TODO: Enable periodic server check
+    else:
+        pass  # TODO: Disable periodic server check
 
 
 def send_client_error(client, code, description):
@@ -870,6 +878,10 @@ def send_to_backend_server(user_data_req):
                 user_data_req, timeout=int(config["backend_server_timeout"])
             ) as response:
                 response_data = response.read().decode()
+                # No commands received, just an acknowledgment
+                if response_data == "ACK":
+                    return
+                # Server has commands in its response
                 reply_processor = RxDataReplyProcessor(response_data, None)
                 reply_processor.process_and_send()
 
