@@ -58,7 +58,12 @@ def backend_server_ok(ip):
             response_data = response.read().decode()
             log("Test Response: {}".format(response_data), "info")
             if "OK" in response_data:
-                log("Backend server {} is OK".format(str(ip)), "info")
+                log(
+                    "Backend server {} test successfull.  Received: {}".format(
+                        str(ip), response_data
+                    ),
+                    "info",
+                )
                 return True
             else:
                 log(
