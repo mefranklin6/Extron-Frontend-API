@@ -735,7 +735,6 @@ def macro_call_handler(command_type, data_dict=None):
     if command_type == "get_all_elements":
         try:
             data = get_all_elements_()
-            data = json.dumps(data).encode()
             return (data, None)
         except Exception as e:
             return (None, e)
