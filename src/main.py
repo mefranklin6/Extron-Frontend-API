@@ -454,9 +454,17 @@ def set_executive_mode(obj, mode):
 
 def connect(obj, timeout=None):
     if timeout is None:
-        return obj.Connect()
+        result = obj.Connect()
     else:
-        return obj.Connect(float(timeout))
+        result = obj.Connect(float(timeout))
+    if "Connected" in result or "ConnectedAlready" in result:
+        return result
+    elif "Failed to connect" in result:
+        raise ConnectionError(result)
+    elif "Invalid credentials" in result:
+        raise PermissionError(result)
+    else:
+        raise Exception(result)
 
 
 def disconnect(obj):
@@ -719,6 +727,14 @@ def method_call_handler(data):
         return None, err
     except ValueError as e:
         err = "400 Bad Request | Value Error: {}".format(str(e))
+        log(str(err), "error")
+        return None, err
+    except ConnectionError as e:
+        err = "503 Service Unavailable | Connection Error: {}".format(str(e))
+        log(str(err), "error")
+        return None, err
+    except PermissionError as e:
+        err = "403 Forbidden | Permission Error: {}".format(str(e))
         log(str(err), "error")
         return None, err
     except Exception as e:
