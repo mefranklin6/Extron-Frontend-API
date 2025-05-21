@@ -744,6 +744,7 @@ def method_call_handler(data):
 
 
 def macro_call_handler(command_type, data_dict=None):
+    # TODO: Make this a dict
     """
     Executes Macros (different from "Functions"),
     returns tuple golang style (data, error)
@@ -929,7 +930,7 @@ rpc_serv = EthernetServerInterfaceEx(
 )
 
 if rpc_serv.StartListen() != "Listening":
-    raise ResourceWarning("Port unavailable")  # this is not likely to recover
+    raise ResourceWarning("Port unavailable")  # this will not recover
 
 
 @event(rpc_serv, "ReceiveData")
