@@ -7,7 +7,7 @@ from extronlib.interface import EthernetServerInterfaceEx
 from extronlib.system import File as open
 from extronlib.system import SaveProgramLog, Timer, Wait
 
-import variables as v
+import variables
 from extronlib_extensions import (
     EthernetClientInterfaceEx,
     RelayInterfaceEx,
@@ -40,7 +40,7 @@ if not config:
 log_to_disk = config.get("log_to_disk", False)
 if log_to_disk:
     ProgramLogSaver.EnableProgramLogSaver()
-    v.program_log_saver = "Enabled"
+    variables.program_log_saver = "Enabled"
     log("Enabling Program Log Saver", "info")
 
 
@@ -519,9 +519,9 @@ def get_all_elements_():
         "all_relays": list(RELAYS_MAP.keys()),
         "all_serial_interfaces": list(SERIAL_INTERFACE_MAP.keys()),
         "all_ethernet_interfaces": str(ETHERNET_INTERFACE_MAP),
-        "backend_server_available": v.backend_server_available,
-        "backend_server_role": v.backend_server_role,
-        "backend_server_ip": v.backend_server_ip,
+        "backend_server_available": variables.backend_server_available,
+        "backend_server_role": variables.backend_server_role,
+        "backend_server_ip": variables.backend_server_ip,
     }
     return data
 
@@ -535,14 +535,14 @@ def set_backend_server_(ip=None):
 
     def _set_server(role, ip, message, log_level):
         backend_server_available_setter(True)
-        v.backend_server_role = role
-        v.backend_server_ip = ip
+        variables.backend_server_role = role
+        variables.backend_server_ip = ip
         log(message, log_level)
 
     def _no_server(message):
         backend_server_available_setter(False)
-        v.backend_server_role = "none"
-        v.backend_server_ip = None
+        variables.backend_server_role = "none"
+        variables.backend_server_ip = None
         log(message, "error")
 
     if ip:  # Custom IP specified
@@ -581,16 +581,16 @@ def set_backend_server_(ip=None):
 
 def program_log_saver_enable_disable(enabled: bool):
     if string_to_bool(enabled):
-        if v.program_log_saver == "Enabled":
+        if variables.program_log_saver == "Enabled":
             return "200 OK | Program Log Saver is already enabled"
         ProgramLogSaver.EnableProgramLogSaver()
-        v.program_log_saver = "Enabled"
+        variables.program_log_saver = "Enabled"
         return "200 OK | Program Log will be continually saved to disk"
     else:
-        if v.program_log_saver == "Disabled":
+        if variables.program_log_saver == "Disabled":
             return "200 OK | Program Log Saver is already disabled"
         ProgramLogSaver.DisableProgramLogSaver()
-        v.program_log_saver = "Disabled"
+        variables.program_log_saver = "Disabled"
         return "200 OK | Program Log will no longer save to disk"
 
 
@@ -657,7 +657,7 @@ def any_slider_changed(slider, action, value):
 
 
 def backend_server_available_setter(status):
-    v.backend_server_available = status
+    variables.backend_server_available = status
     if status == True:
         pass  # TODO: Enable periodic server check
     else:
@@ -855,15 +855,17 @@ class RxDataReplyProcessor:
 
 
 def handle_backend_server_timeout():
-    v.backend_server_timeout_count += 1
+    variables.backend_server_timeout_count += 1
     log(
-        "Backend Server Timed Out Count: {}".format(v.backend_server_timeout_count),
+        "Backend Server Timed Out Count: {}".format(
+            variables.backend_server_timeout_count
+        ),
         "error",
     )
 
 
 def format_user_interaction_data(gui_element_data):
-    if v.backend_server_available != True:
+    if variables.backend_server_available != True:
         return None
 
     domain = gui_element_data[0]
@@ -875,7 +877,7 @@ def format_user_interaction_data(gui_element_data):
 
     data = json.dumps(data).encode()
     headers = {"Content-Type": "application/json"}
-    url = "{}/api/v1/{}".format(v.backend_server_ip, domain)
+    url = "{}/api/v1/{}".format(variables.backend_server_ip, domain)
     user_data_req = urllib.request.Request(
         url, data=data, headers=headers, method="PUT"
     )
@@ -913,7 +915,7 @@ def send_to_backend_server(user_data_req):
             log("Bare Exception for send_to_backend_server: {}".format(str(e)), "error")
             return
 
-        v.backend_server_timeout_count = 0
+        variables.backend_server_timeout_count = 0
 
 
 def send_user_interaction(gui_element_data):
