@@ -143,9 +143,9 @@ class InstantionConverter:
         )
 
 
-def select_directory():
+def select_source_directory():
     global selected_directory
-    selected_directory = filedialog.askdirectory(title="Select Directory")
+    selected_directory = filedialog.askdirectory(title="Select Source Directory")
     if selected_directory:
         print(f"Selected directory: {selected_directory}")
     else:
@@ -165,7 +165,9 @@ root.title("GUI Instantiation Converter")
 label = tk.Label(root, text=info, anchor="w", justify="left")
 label.pack(pady=10, fill="both")
 
-button_select = tk.Button(root, text="Select Directory", command=select_directory)
+button_select = tk.Button(
+    root, text="Select Directory", command=select_source_directory
+)
 button_select.pack(pady=5)
 
 button_start = tk.Button(root, text="Start", command=start_conversion)
