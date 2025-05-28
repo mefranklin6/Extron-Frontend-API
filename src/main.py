@@ -19,7 +19,7 @@ from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
 from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
-from utils import backend_server_ok, log, set_ntp, ProgramLogSaver
+from utils import ProgramLogSaver, backend_server_ok, log, set_ntp
 
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
 
