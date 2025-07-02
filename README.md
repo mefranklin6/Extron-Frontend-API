@@ -278,6 +278,26 @@ Example:
 
 The processor will then wait for an immidate reply, which could be instructions to set that same button to a state of `0` so the user has immidate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
 
+## Building a Backend Server
+
+### Handshake Response
+
+If your backend server is online, operating normally, and available to serve: a call to `/api/v1/test` MUST respond with "OK".  This allows us to take the service down for maintnance but keep the actual server online.  The processor does not simply check if the server is online, it must receive the OK reply before it attempts to use the server or else it will try another server in it's config.json.
+
+### Endpoints
+
+- `/api/v1/test`: MUST respond with "OK" if the server is available to serve the processor
+
+- `/api/v1/button`: handles button events
+
+- `/api/v1/slider`: handles slider events
+
+- `/api/v1/knob`: handles knob events
+
+### Initial Connection and State Tracking
+
+After the server receives a call to the test endpoint, it is the responsibility of the server to discover information about the processor, including its' current state.  Keep in mind that the processor may have connected to the server because its' previous server failed, so the new server needs to respond accordingly.
+
 ## Known Issues
 
 All issues and the roadmap for future releases is in the Github issue tracker.
