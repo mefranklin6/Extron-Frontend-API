@@ -21,6 +21,8 @@ from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
 from utils import ProgramLogSaver, backend_server_ok, log, set_ntp
 
+# "Released" is ommitted by default to increase performance,
+# but it can be added to the list if needed.
 BUTTON_EVENTS = ["Pressed", "Held", "Repeated", "Tapped"]
 
 
@@ -521,62 +523,76 @@ def get_all_elements_():
         "all_ethernet_interfaces": str(ETHERNET_INTERFACE_MAP),
         "backend_server_available": variables.backend_server_available,
         "backend_server_role": variables.backend_server_role,
-        "backend_server_ip": variables.backend_server_ip,
+        "backend_server_address": variables.backend_server_address,
     }
     return data
 
 
-def set_backend_server_(ip=None):
+def set_backend_server_(address=None):
     """
-    Call example: {"type": "set_backend_server", "ip": "http://10.0.0.1:8080"}
+    Call example: {"type": "set_backend_server", "address": "http://10.0.0.1:8080"}
 
-    If no IP is provided, the function will try servers in the config.json file.
+    If no address is provided, the function will try servers in the config.json file.
     """
 
-    def _set_server(role, ip, message, log_level):
+    def _set_server(role, address, message, log_level):
         backend_server_available_setter(True)
         variables.backend_server_role = role
-        variables.backend_server_ip = ip
+        variables.backend_server_address = address
         log(message, log_level)
 
     def _no_server(message):
         backend_server_available_setter(False)
         variables.backend_server_role = "none"
-        variables.backend_server_ip = None
+        variables.backend_server_address = None
         log(message, "error")
 
-    if ip:  # Custom IP specified
-        if backend_server_ok(ip):
+    if address is not None and address != "":  # Custom address specified
+        if backend_server_ok(address):
             _set_server(
-                "custom", ip, "Using custom backend server: {}".format(ip), "warning"
+                role="custom",
+                address=address,
+                message="Using custom backend server: {}".format(address),
+                log_level="warning",
             )
-            return "200 OK | Custom IP"
+            return "200 OK | Custom address"
         else:
-            err = "Custom backend server {} is not available".format(ip)
+            err = "Custom backend server {} is not available".format(address)
             _no_server(err)
             return "502 Bad Gateway | {}".format(err)
 
-    # Try primary from the config
-    if backend_server_ok(config["primary_backend_server_ip"]):
-        _set_server(
-            "primary",
-            config["primary_backend_server_ip"],
-            "Using primary backend server",
-            "info",
-        )
-        return "200 OK | Primary Server Selected"
-    # Try secondary from the config
-    elif backend_server_ok(config["secondary_backend_server_ip"]):
-        _set_server(
-            "secondary",
-            config["secondary_backend_server_ip"],
-            "Using secondary backend server",
-            "warning",
-        )
-        return "200 OK | Secondary Server Selected"
-    else:
-        _no_server("No backend servers available")
-        return "502 Bad Gateway | No backend servers available"
+    server_list = config.get("backend_server_addresses", None)
+    if not server_list:
+        err = "No backend server addresses configured in config.json"
+        _no_server(err)
+        return "502 Bad Gateway | {}".format(err)
+    log("Checking backend server addresses: {}".format(server_list), "info")
+
+    for address in server_list:
+        if backend_server_ok(address):
+            if address == config["backend_server_addresses"][0]:
+                # First server from the list is available
+                _set_server(
+                    role="primary",
+                    address=address,
+                    message="Using primary backend server: {}".format(address),
+                    log_level="info",
+                )
+                return "200 OK | Primary Server Selected"
+            else:
+                # Not the first server, but still available
+                _set_server(
+                    role="secondary",
+                    address=address,
+                    message="First backend server not available, using: {}".format(
+                        address
+                    ),
+                    log_level="warning",
+                )
+                return "200 OK | Secondary Server Selected"
+
+    _no_server("No backend servers available")
+    return "502 Bad Gateway | No backend servers available"
 
 
 def program_log_saver_enable_disable(enabled: bool):
@@ -758,8 +774,8 @@ def macro_call_handler(command_type, data_dict=None):
 
     elif command_type == "set_backend_server":
         try:
-            ip = data_dict.get("ip", None)
-            result = set_backend_server_(ip)
+            address = data_dict.get("address", None)
+            result = set_backend_server_(address)
             return (result, None)
         except Exception as e:
             return (None, e)
@@ -877,7 +893,7 @@ def format_user_interaction_data(gui_element_data):
 
     data = json.dumps(data).encode()
     headers = {"Content-Type": "application/json"}
-    url = "{}/api/v1/{}".format(variables.backend_server_ip, domain)
+    url = "{}/api/v1/{}".format(variables.backend_server_address, domain)
     user_data_req = urllib.request.Request(
         url, data=data, headers=headers, method="PUT"
     )

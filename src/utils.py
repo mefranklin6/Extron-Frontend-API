@@ -47,9 +47,9 @@ def set_ntp(ntp_primary, ntp_secondary=None):
         log("Error setting NTP: {}".format(str(e)), "error")
 
 
-def backend_server_ok(ip):
+def backend_server_ok(address):
     headers = {"Content-Type": "application/json"}
-    url = "{}/api/v1/{}".format(ip, "test")
+    url = "{}/api/v1/{}".format(address, "test")
 
     req = urllib.request.Request(url, headers=headers, method="GET")
 
@@ -60,7 +60,7 @@ def backend_server_ok(ip):
             if "OK" in response_data:
                 log(
                     "Backend server {} test successfull.  Received: {}".format(
-                        str(ip), response_data
+                        str(address), response_data
                     ),
                     "info",
                 )
@@ -74,7 +74,7 @@ def backend_server_ok(ip):
     # Timeout
     except urllib.error.URLError as e:
         if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e.reason):
-            log("Backend server {} timed out".format(str(ip)), "error")
+            log("Backend server {} timed out".format(str(address)), "error")
         else:
             log("URLError: {}".format(str(e)), "error")
 

@@ -168,7 +168,7 @@ while their undocumented private methods that we use often are in `_camelCase`).
 - `set_backend_server` will change the backend server that the processor sends user interactions to.  This is only intended to be used in case of server failure or temporary migration as the processor will try servers in the config.json first (and will fall back to the config.json servers upon processor reboot or power failure).  Example:
 
     ```JSON
-    {"type": "set_backend_server", "ip": "http://10.0.0.1:8080"}
+    {"type": "set_backend_server", "address": "http://10.0.0.1:8080"}
     ```
 
 - `program_log_saver`: written by Jean-Luc Rioux, will continually write your program log to disk when enabled.  The feature is disabled by default unless you specify `"log_to_disk": true"` in `config.json` or use the RPC API:

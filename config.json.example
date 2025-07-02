@@ -1,6 +1,8 @@
 {
-    "primary_backend_server_ip": "http://192.168.1.1/",
-    "secondary_backend_server_ip": "http://192.168.1.2/",
+    "backend_server_addresses": [
+        "http://avprimary.yourorg.edu:8080", 
+        "http://192.168.1.2:8080"
+    ],
     "backend_server_timeout": 5,
     "ntp_primary": "ntp1.yourorg.edu",
     "ntp_secondary": "pool.ntp.org",
