@@ -6,7 +6,7 @@ Not affiliated with Extron
 
 ## Use Cases
 
-This project can be used to entirely replace the 'backend' (logic, device handling, external connections) on a control system running Extron Control Script (ECS).  This project only uses the standard libraries that come with 'Pro' (non-xi) control processors so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  (basic proof-of-concept project here <https://github.com/mefranklin6/test-echo>)
+This project can be used to entirely replace the 'backend' (logic, device handling, external connections) with a control system running Extron Control Script (ECS).  This project only uses the standard libraries that come with 'Pro' (non-xi) control processors so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  (basic proof-of-concept project here <https://github.com/mefranklin6/test-echo>)
 
 Physical ports such as relays, serial ports and devices on a processors AVLAN are also supported.
 
@@ -14,7 +14,7 @@ Additionally, this project gives CLI-like control over the processor and connect
 
 ## Reason
 
-Use modern Python, Go, Rust, C#, Java, Javascript, NodeRed or basically any modern language as a backend and extend the useful life and capibility of your hardware.
+Use modern Python, Go, Rust, C#, Java, Javascript, NodeRed or basically any modern language as a backend and extend the useful life and capability of your hardware.
 
 Additionally, the process of deploying a system using ControlScript® Deployment Utility (CSDU) is cumbersome.  It is a manual process that can only deploy to one room at a time and breaks any hope of a CI/CD pipeline, continuous improvement, and makes minor bugfixes painful if you have a shared codebase.  By using this project, you only have to use CSDU once, or whenever your GUI file changes.
 
@@ -24,11 +24,11 @@ Anything that can run Extron ControlScript®.  You'll need someone who holds the
 
 ## Current State
 
-IMPORTANT: Branch `Beta` is the latest stable release and is essentially feature-complete, as in it is ready to start converting the vast majority of projects. If you find something that you need missing you can submit an issue or send a pull request.
+IMPORTANT: Branch `Beta` is the latest stable release and is essentially feature-complete, as it is ready to start converting the vast majority of projects. If you find something that you need missing, you can submit an issue or send a pull request.
 
 Branch `main` is the current beta development branch and may not be 100% stable at all times.  You can find features to be implemented and a milestone for the 1.0 release in Github Issues.  
 
-I ask that if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
+I ask if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
 
 ## Use
 
@@ -36,9 +36,9 @@ Deployment is mostly unchanged from the normal process, but please pay attention
 
 1. As normal, place your `.gdl` file in `layout` then setup your room configuration JSON file, but make note of the `Device Alias`'s you assign to processors and UI Devices (touch panels).
 
-2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server coniguration.
+2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server configuration.
 
-3. Instantiate your hardware into the existing lists using the Device Aliases from step 1 into the `src/hardware/hardware.py` file.
+3. Instantiate your hardware into the existing lists using Device Aliases from step 1 into the `src/hardware/hardware.py` file.
 Example
 
 ```Python
@@ -89,9 +89,9 @@ all_buttons = [
 
 There are two major systems that allow fast responsiveness and extensive control over the GUI.
 
-1. A custom built Remote Procedure Call (RPC) API listening on a port of your choosing. This API will accept unsolicited commands. Currently you can send GUI action commands such as page flips, set text on labels, and all of the common tasks one would use for making a responsive GUI. This API can be controlled from a server or you can even send commands through `curl`.  Additionally, you can use this API to get the properties of your processors, touch panels, GUI elements or even send reboot commands.
+1. A custom-built Remote Procedure Call (RPC) API listening on a port of your choosing. This API will accept unsolicited commands. Currently you can send GUI action commands such as page flips, set text on labels, and all of the common tasks one would use for making a responsive GUI. This API can be controlled from a server, or you can even send commands through `curl`.  Additionally, you can use this API to get the properties of your processors, touch panels, GUI elements or even send reboot commands.
 
-2. User actions, such as button presses, are sent to an external server using REST POST commands for external procesisng.  For extra responsiveness, the replies to these POST's can include commands for immidate execution.  A great example is if a user presses a power toggle button, the reply can tell the touch panel to update the state of that button immidately, even before any commands are sent to external devices.
+2. User actions, such as button presses, are sent to an external server using REST POST commands for external processing.  For extra responsiveness, the replies to these POST's can include commands for immediate execution.  A great example is if a user presses a power toggle button, the reply can tell the touch panel to update the state of that button immediately, even before any commands are sent to external devices.
 
 ### RPC Structure
 
@@ -102,11 +102,11 @@ The RPC API is structured as such:
 - Function
 - Function Params (up to 3, sometimes optional)
 
-For simplicity sake **all JSON values are strings**.  The API will type convert appropriately.
+For simplicity’s sake **all JSON values are strings**.  The API will type convert appropriately.
 
 Due to limitations in the built-in server library, the RPC API runs `HTTP 0.9`.  Unfortunately that means that the current version of Postman will not work for API testing.
 
-The API has been made to mirror existing methods as close as possible.  The paramaters in the form of `arg1`, `arg2`, `arg3` are simply paramaters that need to be passed to the control script function.   The `ControlScript® Documentation` document provided by Extron will prove helpful in determing how to use the RPC API.
+The API has been made to mirror existing methods as close as possible.  The parameters in the form of `arg1`, `arg2`, `arg3` are simply parameters that need to be passed to the control script function.   The `ControlScript® Documentation` document provided by Extron will prove helpful in determining how to use the RPC API.
 
 #### Domains (or types) are derived from their Extron classes
 
@@ -123,7 +123,7 @@ The API has been made to mirror existing methods as close as possible.  The para
 
 #### "Objects" are objects that fall in any of the above classes
 
-There is a name/alias to object retrevial system where passing in the string representation of the object will return the object
+There is a name/alias to object retrieval system where passing in the string representation of the object will return the object.
 
 - For processors and touch panels, pass in their `Device Alias` as setup in your standard room configuration JSON file.
 
@@ -138,14 +138,14 @@ For example, the `Label` class has a method called `SetText`.  You would call `S
 ### Additional functions which have been added
 
 *Hint: Built-in documented ECS functionality uses the same `PascalCase` as written by Extron (
-while their undocumented private methods that we use often are in `_camelCase`).  Additional methods, macros or properties which are origional to this project use PEP8 `snake_case`.*
+while their undocumented private methods that we use often are in `_camelCase`).  Additional methods, macros or properties which are original to this project use PEP8 `snake_case`.*
 
 - `get_property` with the property name as `arg1` will return the property of an object.  Available properties of an object are found in Extron ControlScript® documentation.
 
   - Note the undocumented "private" properties of `UIDevice` class below can prove helpful
     - `_pages` returns a dictionary of {"PageID":"PageName",} for the .gdl file
     - `_popups` returns a dictionary of dictionaries with all the attributes of the systems popups
-    - `_currPage` returns the ID of the current page shown.  Use `_pages` to find the name of the page if needed
+    - `_currPage` returns the ID of the current page shown.  Use `_pages` to find the name of the page if needed.
     - `_visiblePopups` returns a tuple of ('I', [list of popup id's]).  As with pages, you can corelate the results of `_popups` with the ID to find the name of the popup.
 
     Example to return the current page of a UI device with DeviceAlias of "TouchPanel_1":
@@ -179,7 +179,7 @@ while their undocumented private methods that we use often are in `_camelCase`).
 
 ### RPC API Examples
 
-> **Note:** You can also pass in a list [] of JSON and the processor will execute the commands in series and return the results in the same order.  This is more resource efficcent when several commands or queries need to be executed at the same time.
+> **Note:** You can also pass in a list [] of JSON and the processor will execute the commands in series and return the results in the same order. This is more resource efficient when several commands or queries need to be executed at the same time.
 
 To set a button called `Btn_Power` to a state of `1`, you would use the following command structure:
 
@@ -209,7 +209,7 @@ To get the state of that same button:
 }
 ```
 
-To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg1` will default to the popup staying indefinetly, as documented)
+To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg1` will default to the popup staying indefinitely, as documented)
 
 ```JSON
 {
@@ -222,7 +222,7 @@ To show a popup called `Popup1` for 5 seconds. (Alternatively not including `arg
 ```
 
 To set buttons called to a medium blink from state 1 to state 2.
-In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the `state_list`.  The processor will execute both commands in series since they are passed in as a list.
+In this case `arg1` corresponds to the methods `rate` parameter and `arg2` is the `state_list`.  The processor will execute both commands in series since they are passed in as a list.
 
 ```JSON
 [
@@ -246,9 +246,9 @@ In this case `arg1` coresponds to the methods `rate` paramater and `arg2` is the
 
 ### RPC API Return Values
 
-The RPC API server only runs HTTP 0.9, so we embed HTTP status codes in the response body.  If the response body includes data, the status code and data will be seperated by a pipe `[200 OK | <data here if any>]`.  
+The RPC API server only runs HTTP 0.9, so we embed HTTP status codes in the response body.  If the response body includes data, the status code and data will be separated by a pipe `[200 OK | <data here if any>]`.  
 
-The response from the processor is always in the form of a list.  If a list of commands was sent to the processor, a list of results will be returned in the same order. (Command execution by list is blocking, and the return message will include the results of all of the actions at once once after all of them have been completed, so be careful for any commands that may cause an issue!)
+The response from the processor is always in the form of a list.  If a list of commands was sent to the processor, a list of results will be returned in the same order. (Command execution by list is blocking, and the return message will include the results of all of the actions at once after all of them have been completed, so be careful for any commands that may cause an issue!)
 
 ### REST API Structure
 
@@ -276,13 +276,13 @@ This data will be sent to domain endpoints on the backend server.
 Example:
 `http://192.168.1.1:8080/api/v1/button`
 
-The processor will then wait for an immidate reply, which could be instructions to set that same button to a state of `0` so the user has immidate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
+The processor will then wait for an immediate reply, which could be instructions to set that same button to a state of `0` so the user has immediate feedback.  This is especially important for sliders so they don't 'bounce' back to their old state upon release.
 
 ## Building a Backend Server
 
 ### Handshake Response
 
-If your backend server is online, operating normally, and available to serve: a call to `/api/v1/test` MUST respond with "OK".  This allows us to take the service down for maintnance but keep the actual server online.  The processor does not simply check if the server is online, it must receive the OK reply before it attempts to use the server or else it will try another server in it's config.json.
+If your backend server is online, operating normally, and available to serve: a call to `/api/v1/test` MUST respond with "OK".  This allows us to take the service down for maintenance but keep the actual server online.  The processor does not simply check if the server is online, it must receive the OK reply before it attempts to use the server or else it will try another server in it's config.json.
 
 ### Endpoints
 
@@ -298,6 +298,10 @@ If your backend server is online, operating normally, and available to serve: a 
 
 After the server receives a call to the test endpoint, it is the responsibility of the server to discover information about the processor, including its' current state.  Keep in mind that the processor may have connected to the server because its' previous server failed, so the new server needs to respond accordingly.
 
+### Upon Receiving Data
+
+When the server receives unsolicited data from a processor, the server must send a reply of either a command (ex: immediately update the level on a slider) or an `"ACK"` if the server has no command to send at the time.
+
 ## Known Issues
 
 All issues and the roadmap for future releases is in the Github issue tracker.
@@ -306,7 +310,7 @@ All issues and the roadmap for future releases is in the Github issue tracker.
 
 Q: Wouldn't the GUI update slower vs writing the logic on the local processor since it has to contact an external server over the network then wait for a reply?
 
-A: Unless your network is awfuly slow, the user will not notice.  You have to remember that when it comes to languages you can't get much slower than Python.  Even though you add in network latency, the processing can be exponentially faster if using a modern language like Go.  If you're using a new Q xi procesor running Python 3.11, and a backend server running the same version of Python, there should be no noticeable difference to the user as the typical network latency on a LAN will be sub 10ms, which is much faster than your typical webpage.  Additinally, the processor is greatly unburdened and on some systems decoupling the backend will result in significant performance improvements and faster GUI responsiveness since the processor is only handling the GUI and the API's.
+A: Unless your network is awfully slow, the user will not notice.  You have to remember that when it comes to languages you can't get much slower than Python.  Even though you add in network latency, the processing can be exponentially faster if using a modern language like Go.  If you're using a new Q xi processor running Python 3.11, and a backend server running the same version of Python, there should be no noticeable difference to the user as the typical network latency on a LAN will be sub 10ms, which is much faster than your typical webpage.  Additionally, the processor is greatly unburdened and on some systems decoupling the backend will result in significant performance improvements and faster GUI responsiveness since the processor is only handling the GUI and the API's.
 
 Q: What if the backend server goes down or the processor loses connectivity to it?
 
@@ -314,7 +318,7 @@ A: Well then the system breaks and the touch panel will appear 'frozen'.  This p
 
 Q: Will Extron support this?
 
-A: Probably not.  Please do not contact their support for help, I'm hoping this system will reduce support calls for them.  When it comes to building a backend server, absloute freedom comes with the responsibility for fixing things yourself.
+A: Probably not.  Please do not contact their support for help, I'm hoping this system will reduce support calls for them.  When it comes to building a backend server, absolute freedom comes with the responsibility for fixing things yourself.
 
 Q: Will you post an example of a backend server?
 
@@ -322,7 +326,7 @@ A: Yes, see the link at the top of this readme.
 
 Q: What about device drivers and modules?
 
-A: The backend server i'm writing intends to use Go Microservices from <https://github.com/Dartmouth-OpenAV> for device handling.  If your equipment is not yet supported, please consider writing a microservice and contributing it to the group.
+A: The backend server I’m writing intends to use Go Microservices from <https://github.com/Dartmouth-OpenAV> for device handling.  If your equipment is not yet supported, please consider writing a microservice and contributing it to the group.
 
 Q: What about devices on AVLAN or devices that the backend server can't reach?
 
@@ -380,7 +384,7 @@ After we're connected, we can start sending commands.  We'll use the `SendAndWai
 }
 ```
 
-If you're having issues, make sure your connection was successfull and you are using the correct hostname (If you used an IP, the "Hostname" is the IP address without the port number).  You can check that by looking at all elements.
+If you're having issues, make sure your connection was successful and you are using the correct hostname (If you used an IP, the "Hostname" is the IP address without the port number).  You can check that by looking at all elements.
 
 ```json
 {
@@ -400,4 +404,4 @@ That will return the connection information under `all_ethernet_interfaces` like
 
 ### Disclaimer
 
-Not affilated with Extron. All registered trademarks noted are property of Extron, and I may have missed some but those would also be property of Extron.
+Not affiliated with Extron. All registered trademarks noted are property of Extron, and I may have missed some but those would also be property of Extron.
