@@ -676,9 +676,30 @@ def backend_server_available_setter(status):
     if status == True:
         pass  # TODO: Enable periodic server check
     else:
-        if variables.backend_server_available is not False:
-            set_backend_server_recursive()  # Only call on true status change
+        if variables.backend_server_available == True:
+            set_backend_server_loop()  # Only call on true status change
     variables.backend_server_available = status
+
+
+def set_backend_server_loop():
+    """
+    Will try all servers listed in config.json continually,
+    until one is available
+    """
+
+    set_backend_server_()
+    if variables.backend_server_available:
+        return
+
+    def _timer_callback(timer, count):
+        if variables.backend_server_available:
+            timer.Stop()
+            return
+        else:
+            set_backend_server_()
+            timer.Restart()
+
+    timer = Timer(5, _timer_callback)
 
 
 def send_client_error(client, code, description):
@@ -986,32 +1007,13 @@ def handle_rpc_client_connect(client, state):
     pass
 
 
-def set_backend_server_recursive():
-    """Will try all servers listed in config.json until one is available"""
-
-    set_backend_server_()
-    if not variables.backend_server_available:
-        log("No Backend Server Available, retrying in 5 seconds", "error")
-        Wait(5, set_backend_server_recursive)
-
-    else:
-        log(
-            """Backend Server Connected:
-            Address: {}
-            Role: {}""".format(
-                variables.backend_server_address, variables.backend_server_role
-            ),
-            "info",
-        )
-
-
 def initialize():
     @Wait(0)
     def _set_ntp_async():
         set_ntp(config["ntp_primary"], config["ntp_secondary"])
         log("NTP Complete (success or failure)", "info")
 
-    set_backend_server_recursive()
+    set_backend_server_loop()
 
 
 initialize()
