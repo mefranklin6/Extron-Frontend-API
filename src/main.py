@@ -936,10 +936,13 @@ def send_to_backend_server(user_data_req):
                 response_data = response.read().decode()
                 # No commands received, just an acknowledgment
                 if response_data == "ACK":
+                    variables.backend_server_timeout_count = 0
                     return
                 # Server has commands in its response
                 reply_processor = RxDataReplyProcessor(response_data, None)
                 reply_processor.process_and_send()
+                variables.backend_server_timeout_count = 0
+                return
 
         # Timeout
         except urllib.error.URLError as e:
@@ -947,13 +950,9 @@ def send_to_backend_server(user_data_req):
                 handle_backend_server_timeout()
             else:
                 log("URLError: {}".format(str(e)), "error")
-                return
 
         except Exception as e:
             log("Bare Exception for send_to_backend_server: {}".format(str(e)), "error")
-            return
-
-        variables.backend_server_timeout_count = 0
 
 
 def send_user_interaction(gui_element_data):
