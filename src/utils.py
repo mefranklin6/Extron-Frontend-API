@@ -56,15 +56,8 @@ def backend_server_ok(address):
     try:
         with urllib.request.urlopen(req, timeout=2) as response:
             response_data = response.read().decode()
-            # log("Test Response: {}".format(response_data), "info")
             if "OK" in response_data:
                 variables.backend_server_timeout_count = 0
-                log(
-                    "Backend server {} test successfull.  Received: {}".format(
-                        str(address), response_data
-                    ),
-                    "info",
-                )
                 return True
             else:
                 log(
@@ -124,7 +117,7 @@ def backend_server_ready_to_pair(address):
 class ProgramLogSaver:
     """
     The ProgramLogSaver class is part of:
-    "Various Custom tools and debug tool executable",
+    "Extron-Debug-Tool",
     origionally written by Jean-Luc Rioux, used under MIT license.
 
     The class has been slightly modified to work within
@@ -132,8 +125,7 @@ class ProgramLogSaver:
 
     Original sources:
     https://forum.extron.com/showthread.php?t=775
-    https://drive.google.com/drive/folders/166frczZjKb0sCiJ--VUMTMOUvWjvpuCZ?usp=sharing
-
+    https://github.com/jlrioux/Extron-Debug-Tool
     ----
 
     This class creates one log file per boot,
