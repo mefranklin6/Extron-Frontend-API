@@ -1,6 +1,7 @@
 import urllib.error
 import urllib.request
 from datetime import datetime
+import variables
 
 from extronlib.system import Ping, ProgramLog, SetAutomaticTime
 
@@ -56,8 +57,9 @@ def backend_server_ok(address):
     try:
         with urllib.request.urlopen(req, timeout=2) as response:
             response_data = response.read().decode()
-            log("Test Response: {}".format(response_data), "info")
+            # log("Test Response: {}".format(response_data), "info")
             if "OK" in response_data:
+                variables.backend_server_timeout_count = 0
                 log(
                     "Backend server {} test successfull.  Received: {}".format(
                         str(address), response_data
@@ -73,7 +75,7 @@ def backend_server_ok(address):
 
     # Timeout
     except urllib.error.URLError as e:
-        if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e.reason):
+        if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e):
             log("Backend server {} timed out".format(str(address)), "error")
         else:
             log("URLError: {}".format(str(e)), "error")
