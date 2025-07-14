@@ -1,6 +1,7 @@
 import json
 import urllib.error
 import urllib.request
+from time import sleep  # Only for intentionally blocking the main thread
 
 from extronlib import event
 from extronlib.interface import EthernetServerInterfaceEx
@@ -561,35 +562,54 @@ def set_backend_server_(address=None):
             _no_server(err)
             return "502 Bad Gateway | {}".format(err)
 
+    # No custom address provided, check config.json
     server_list = config.get("backend_server_addresses", None)
     if not server_list:
         err = "No backend server addresses configured in config.json"
         _no_server(err)
         return "502 Bad Gateway | {}".format(err)
-    log("Checking backend server addresses: {}".format(server_list), "info")
 
+    log("Checking backend server addresses: {}".format(server_list), "info")
+    available_servers = []
+    variables.checked_servers = 0
     for address in server_list:
-        if backend_server_ok(address):
-            if address == config["backend_server_addresses"][0]:
-                # First server from the list is available
-                _set_server(
-                    role="primary",
-                    address=address,
-                    message="Using primary backend server: {}".format(address),
-                    log_level="info",
-                )
-                return "200 OK | Primary Server Selected"
-            else:
-                # Not the first server, but still available
-                _set_server(
-                    role="secondary",
-                    address=address,
-                    message="First backend server not available, using: {}".format(
-                        address
-                    ),
-                    log_level="warning",
-                )
-                return "200 OK | Secondary Server Selected"
+
+        # Spawn an asynchronous task to check each server
+        # This avoids long waits if the server list is large and many are not available
+        @Wait(0)
+        def async_check_all_servers(addr=address):
+            log("Checking backend server: {}".format(addr), "info")
+            if backend_server_ok(addr):
+                available_servers.append(addr)
+            variables.checked_servers += 1
+
+    while variables.checked_servers < len(server_list):
+        sleep(0.1)  # Block main thread until all servers are checked
+
+    log("Available backend servers: {}".format(available_servers), "info")
+    if config["backend_server_addresses"][0] in available_servers:
+        # Give priority to the first server in the config list
+        _set_server(
+            role="primary",
+            address=config["backend_server_addresses"][0],
+            message="Using primary backend server: {}".format(
+                config["backend_server_addresses"][0]
+            ),
+            log_level="info",
+        )
+        return "200 OK | Primary Server Selected"
+    elif len(available_servers) > 0:
+        # First server in config is not available but other(s) are
+        # Use the first available server
+        _set_server(
+            role="secondary",
+            address=available_servers[0],
+            message="First backend server not available, using: {}".format(
+                available_servers[0]
+            ),
+            log_level="warning",
+        )
+        return "200 OK | Secondary Server Selected"
 
     _no_server("No backend servers available")
     return "502 Bad Gateway | No backend servers available"
@@ -674,11 +694,13 @@ def any_slider_changed(slider, action, value):
 
 def backend_server_available_setter(status):
     if status == True:
-        pass  # TODO: Enable periodic server check
+        variables.backend_server_available = True
+        log("Backend Server Available", "info")
     else:
         if variables.backend_server_available == True:
+            variables.backend_server_available = False
+            log("Backend Server Unavailable", "error")
             set_backend_server_loop()  # Only call on true status change
-    variables.backend_server_available = status
 
 
 def set_backend_server_loop():
@@ -686,8 +708,6 @@ def set_backend_server_loop():
     Will try all servers listed in config.json continually,
     until one is available
     """
-
-    set_backend_server_()
     if variables.backend_server_available:
         return
 
@@ -893,6 +913,17 @@ class RxDataReplyProcessor:
 
 
 def handle_backend_server_timeout():
+    if not variables.backend_server_available:
+        return
+
+    if variables.backend_server_timeout_count == 2:
+        log(
+            "Backend Server Timed Out 3 times, begining search for new server",
+            "error",
+        )
+        backend_server_available_setter(False)
+        return
+
     variables.backend_server_timeout_count += 1
     log(
         "Backend Server Timed Out Count: {}".format(
@@ -960,7 +991,7 @@ def send_user_interaction(gui_element_data):
     send_to_backend_server(user_data_req)
 
 
-#### RPC Server ####
+#### RPC Server (Listening) ####
 
 rpc_serv = EthernetServerInterfaceEx(
     IPPort=int(config["rpc_server_port"]),
