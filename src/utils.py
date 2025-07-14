@@ -53,7 +53,6 @@ def backend_server_ok(address):
     url = "{}/api/v1/{}".format(address, "test")
 
     req = urllib.request.Request(url, headers=headers, method="GET")
-
     try:
         with urllib.request.urlopen(req, timeout=2) as response:
             response_data = response.read().decode()
@@ -79,6 +78,42 @@ def backend_server_ok(address):
             log("Backend server {} timed out".format(str(address)), "error")
         else:
             log("URLError: {}".format(str(e)), "error")
+
+    except Exception as e:
+        log(str(e), "error")
+
+    return False
+
+
+def backend_server_ready_to_pair(address):
+    headers = {"Content-Type": "application/json"}
+    url = "{}/api/v1/{}".format(address, "pair")
+
+    req = urllib.request.Request(url, headers=headers, method="GET")
+
+    try:
+        with urllib.request.urlopen(req, timeout=2) as response:
+            response_data = response.read().decode()
+            if response_data:
+                # Any response is okay.  It is the responsibilty of the server to take over form here
+                variables.backend_server_timeout_count = 0
+                log(
+                    "Backend server {} pair successfull.  Received: {}".format(
+                        str(address), response_data
+                    ),
+                    "info",
+                )
+                return True
+
+    # Timeout
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, urllib.error.URLError) and "timed out" in str(e):
+            log(
+                "Backend server pariring request at {} timed out".format(str(address)),
+                "error",
+            )
+        else:
+            log("URLError: Server Pairing Error: {}".format(str(e)), "error")
 
     except Exception as e:
         log(str(e), "error")

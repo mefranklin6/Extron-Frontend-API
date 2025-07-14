@@ -36,7 +36,7 @@ Deployment is mostly unchanged from the normal process, but please pay attention
 
 1. As normal, place your `.gdl` file in `layout` then setup your room configuration JSON file, but make note of the `Device Alias`'s you assign to processors and UI Devices (touch panels).
 
-2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server configuration.
+2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server configuration.  Note: The system will prioritize the first server in the list.
 
 3. Instantiate your hardware into the existing lists using Device Aliases from step 1 into the `src/hardware/hardware.py` file.
 Example
@@ -280,13 +280,19 @@ The processor will then wait for an immediate reply, which could be instructions
 
 ## Building a Backend Server
 
+You have the freedom to make the backend server however you want, but if you would like to use this code in an un-modified state, the server must support the following commands and structure.
+
 ### Handshake Response
 
 If your backend server is online, operating normally, and available to serve: a call to `/api/v1/test` MUST respond with "OK".  This allows us to take the service down for maintenance but keep the actual server online.  The processor does not simply check if the server is online, it must receive the OK reply before it attempts to use the server or else it will try another server in it's config.json.
 
+Note: Upon initial deployment or upon server loss, a processor will send a test check to all servers listed in its' config.json and will choose the first in the list if available.
+
 ### Endpoints
 
 - `/api/v1/test`: MUST respond with "OK" if the server is available to serve the processor
+
+- `/api/v1/pair`: Can respond with anything, but the server MUST discover the room configuration and frontend state while also responding to incoming data.
 
 - `/api/v1/button`: handles button events
 
@@ -296,7 +302,7 @@ If your backend server is online, operating normally, and available to serve: a 
 
 ### Initial Connection and State Tracking
 
-After the server receives a call to the test endpoint, it is the responsibility of the server to discover information about the processor, including its' current state.  Keep in mind that the processor may have connected to the server because its' previous server failed, so the new server needs to respond accordingly.
+After the server receives a call to `/api/v1/pair`, it is the responsibility of the server to discover information about the processor, including its' current state.  Keep in mind that the processor may have connected to the server because its' previous server failed, so the new server needs to respond accordingly.
 
 ### Upon Receiving Data
 
@@ -310,11 +316,11 @@ All issues and the roadmap for future releases is in the Github issue tracker.
 
 Q: Wouldn't the GUI update slower vs writing the logic on the local processor since it has to contact an external server over the network then wait for a reply?
 
-A: Unless your network is awfully slow, the user will not notice.  You have to remember that when it comes to languages you can't get much slower than Python.  Even though you add in network latency, the processing can be exponentially faster if using a modern language like Go.  If you're using a new Q xi processor running Python 3.11, and a backend server running the same version of Python, there should be no noticeable difference to the user as the typical network latency on a LAN will be sub 10ms, which is much faster than your typical webpage.  Additionally, the processor is greatly unburdened and on some systems decoupling the backend will result in significant performance improvements and faster GUI responsiveness since the processor is only handling the GUI and the API's.
+A: Initial testing suggests performance *increases* over traditional ECS projects of a moderate size. The reduced burden on the control processor results in a snappier user experience while on the same LAN, even after network latency. Further performance improvements can be had if using a faster language for your backend server, such as Go.
 
 Q: What if the backend server goes down or the processor loses connectivity to it?
 
-A: Well then the system breaks and the touch panel will appear 'frozen'.  This project comes with a primary and secondary backend server configuration and ability to specify a custom address out of the box, but you can implement your own failover and high-availability architecture as it best fits your needs.
+A: Server failover is fully implemented as long as there is an available server.  Upon reaching the server timeout threshold, the processor will check all servers in its' config.json file and will attempt to pair with the first in the list, or any available server if the first server is not responding "OK".  If there are no servers available, the processor will show an error page defined in config.json if one is configured.
 
 Q: Will Extron support this?
 

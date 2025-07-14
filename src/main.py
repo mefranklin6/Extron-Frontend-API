@@ -20,7 +20,13 @@ from gui_elements.labels import all_labels
 from gui_elements.levels import all_levels
 from gui_elements.sliders import all_sliders
 from hardware.hardware import all_processors, all_ui_devices
-from utils import ProgramLogSaver, backend_server_ok, log, set_ntp
+from utils import (
+    ProgramLogSaver,
+    backend_server_ok,
+    backend_server_ready_to_pair,
+    log,
+    set_ntp,
+)
 
 # "Released" is ommitted by default to increase performance,
 # but it can be added to the list if needed.
@@ -537,10 +543,13 @@ def set_backend_server_(address=None):
     """
 
     def _set_server(role, address, message, log_level):
-        backend_server_available_setter(True)
-        variables.backend_server_role = role
-        variables.backend_server_address = address
-        log(message, log_level)
+        if backend_server_ready_to_pair(address):
+            backend_server_available_setter(True)
+            variables.backend_server_role = role
+            variables.backend_server_address = address
+            log(message, log_level)
+        else:
+            log("Unhandled Pairing Exception with server {}".format(address), "error")
 
     def _no_server(message):
         backend_server_available_setter(False)
@@ -694,13 +703,43 @@ def any_slider_changed(slider, action, value):
 
 def backend_server_available_setter(status):
     if status == True:
-        variables.backend_server_available = True
-        log("Backend Server Available", "info")
+        if variables.backend_server_available == False:
+            variables.backend_server_available = True
+            change_server_check_loop("start")
+            log("Backend Server Available", "info")
+            offline_popup = config.get("backend_server_offline_gui_popup", None)
+            if offline_popup:
+                for ui_device in UI_DEVICE_MAP:
+                    ui_device.ShowPopup(offline_popup)
     else:
         if variables.backend_server_available == True:
             variables.backend_server_available = False
+            change_server_check_loop("stop")
             log("Backend Server Unavailable", "error")
-            set_backend_server_loop()  # Only call on true status change
+            set_backend_server_loop()
+            offline_popup = config.get("backend_server_offline_gui_popup", None)
+            if offline_popup:
+                for ui_device in UI_DEVICE_MAP:
+                    ui_device.HidePopup(offline_popup)
+
+
+def change_server_check_loop(start_or_stop):
+    if start_or_stop == "start":
+        if not variables.server_check_timer:
+            variables.server_check_timer = Timer(
+                config.get("check_backend_server_interval", 5), server_check_callback
+            )
+        else:
+            variables.server_check_timer.Restart()
+    else:
+        variables.server_check_timer.Stop()
+
+
+def server_check_callback(_, __):
+    if backend_server_ok(variables.backend_server_address):
+        return
+    else:
+        handle_backend_server_timeout()
 
 
 def set_backend_server_loop():
@@ -711,7 +750,7 @@ def set_backend_server_loop():
     if variables.backend_server_available:
         return
 
-    def _timer_callback(timer, count):
+    def _timer_callback(timer, _):
         if variables.backend_server_available:
             timer.Stop()
             return
@@ -719,7 +758,7 @@ def set_backend_server_loop():
             set_backend_server_()
             timer.Restart()
 
-    timer = Timer(5, _timer_callback)
+    timer = Timer(config.get("server_search_interval", 2), _timer_callback)
 
 
 def send_client_error(client, code, description):
