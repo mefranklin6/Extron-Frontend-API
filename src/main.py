@@ -648,7 +648,9 @@ def unpair_backend_server():
     Note: make sure before calling this, your server stops responsing to the test endpoint,
     or else the processor might pair to the same server again.
     """
+    log("Backend Server called 'unpair', searching for new server", "warning")
     backend_server_available_setter(False)
+    return "200 OK", None
 
 
 METHODS_MAP = {
@@ -722,9 +724,9 @@ def backend_server_available_setter(status):
             log("Backend Server Available", "info")
             offline_popup = config.get("backend_server_offline_gui_popup", None)
             if offline_popup:
-                for ui_device in UI_DEVICE_MAP:
-                    ui_device.ShowPopup(offline_popup)
-    else:
+                for ui_device in list(UI_DEVICE_MAP.values()):
+                    ui_device.HidePopup(offline_popup)
+    else:  # Status: False
         if variables.backend_server_available == True:
             variables.backend_server_available = False
             server_check_loop("stop")
@@ -732,8 +734,8 @@ def backend_server_available_setter(status):
             set_backend_server_loop()
             offline_popup = config.get("backend_server_offline_gui_popup", None)
             if offline_popup:
-                for ui_device in UI_DEVICE_MAP:
-                    ui_device.HidePopup(offline_popup)
+                for ui_device in list(UI_DEVICE_MAP.values()):
+                    ui_device.ShowPopup(offline_popup)
 
 
 def server_check_loop(start_or_stop):
@@ -881,7 +883,8 @@ def macro_call_handler(command_type, data_dict=None):
         except Exception as e:
             return (None, e)
     elif command_type == "unpair":
-        return "200 OK", None
+        return (unpair_backend_server(), None)
+
     else:
         return (None, "Macro: {} Not Found".format(command_type))
 
