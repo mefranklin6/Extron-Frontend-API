@@ -4,7 +4,7 @@
         "http://192.168.1.2:8080"
     ],
     "check_backend_server_interval": 5,
-    "backend_server_timeout": 5,
+    "backend_server_timeout": 2,
     "server_search_interval": 2,
     "backend_server_offline_gui_popup": "Backend_Server_Offline"
     "ntp_primary": "ntp1.yourorg.edu",

@@ -858,37 +858,31 @@ def method_call_handler(data):
 
 
 def macro_call_handler(command_type, data_dict=None):
-    # TODO: Make this a dict
     """
     Executes Macros (different from "Functions"),
     returns tuple golang style (data, error)
     """
-    if command_type == "get_all_elements":
-        try:
-            data = get_all_elements_()
-            return (data, None)
-        except Exception as e:
-            return (None, e)
+    # Dictionary of handler functions for each command type
+    handlers = {
+        "get_all_elements": lambda: (MACROS_MAP["get_all_elements"](), None),
+        "set_backend_server": lambda: (
+            MACROS_MAP["set_backend_server"](data_dict.get("address", None)),
+            None,
+        ),
+        "program_log_saver": lambda: (
+            MACROS_MAP["program_log_saver"](data_dict["enabled"]),
+            None,
+        ),
+        "unpair": lambda: (MACROS_MAP["unpair"](), None),
+    }
 
-    elif command_type == "set_backend_server":
-        try:
-            address = data_dict.get("address", None)
-            result = set_backend_server_(address)
-            return (result, None)
-        except Exception as e:
-            return (None, e)
-    elif command_type == "program_log_saver":
-        try:
-            enabled = data_dict["enabled"]
-            result = program_log_saver_enable_disable(enabled)
-            return (result, None)
-        except Exception as e:
-            return (None, e)
-    elif command_type == "unpair":
-        return (unpair_backend_server(), None)
-
-    else:
+    if command_type not in handlers:
         return (None, "Macro: {} Not Found".format(command_type))
+
+    try:
+        return handlers[command_type]()
+    except Exception as e:
+        return (None, e)
 
 
 class RxDataReplyProcessor:
