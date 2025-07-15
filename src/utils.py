@@ -1,9 +1,10 @@
 import urllib.error
 import urllib.request
 from datetime import datetime
-import variables
 
 from extronlib.system import Ping, ProgramLog, SetAutomaticTime
+
+import variables
 
 sys_allowed_flag = True
 try:
@@ -54,7 +55,9 @@ def backend_server_ok(address):
 
     req = urllib.request.Request(url, headers=headers, method="GET")
     try:
-        with urllib.request.urlopen(req, timeout=2) as response:
+        with urllib.request.urlopen(
+            req, timeout=variables.backend_server_timeout
+        ) as response:
             response_data = response.read().decode()
             if "OK" in response_data:
                 variables.backend_server_timeout_count = 0
@@ -85,7 +88,9 @@ def backend_server_ready_to_pair(address):
     req = urllib.request.Request(url, headers=headers, method="GET")
 
     try:
-        with urllib.request.urlopen(req, timeout=2) as response:
+        with urllib.request.urlopen(
+            req, timeout=variables.backend_server_timeout
+        ) as response:
             response_data = response.read().decode()
             if response_data:
                 # Any response is okay.  It is the responsibilty of the server to take over form here

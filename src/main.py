@@ -52,6 +52,8 @@ if log_to_disk:
     variables.program_log_saver = "Enabled"
     log("Enabling Program Log Saver", "info")
 
+variables.backend_server_timeout = config.get("backend_server_timeout", 2)
+
 
 class PortInstantiation:
     """
