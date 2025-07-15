@@ -193,7 +193,7 @@ class ProgramLogSaver:
                 err_msg = "EXCEPTION:{}:{}:{}".format(
                     __class__.__name__, "__saveprogramlog", e
                 )
-            ProgramLog(err_msg, "error")
+            log(err_msg, "error")
 
     def __savedummyprogramlog():
         try:
@@ -210,7 +210,7 @@ class ProgramLogSaver:
                 err_msg = "EXCEPTION:{}:{}:{}".format(
                     __class__.__name__, "__savedummyprogramlog", e
                 )
-            ProgramLog(err_msg, "error")
+            log(err_msg, "error")
 
     def __checkprogramlog(timer, count):
         ProgramLogSaver.__savedummyprogramlog()
