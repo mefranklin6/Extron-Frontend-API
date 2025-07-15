@@ -171,6 +171,12 @@ while their undocumented private methods that we use often are in `_camelCase`).
     {"type": "set_backend_server", "address": "http://10.0.0.1:8080"}
     ```
 
+- `unpair` The backend server should send this to the processor to make it immediately disconnect and try to find a new server. This is useful for maintenance or server reboots, although the processor would have handled this on its' own after a set number of timeouts anyway.  Note: before calling this, the server should stop responding "OK" or else the processor might try to repair.  
+
+    ```JSON
+    {"type": "unpair"}
+    ```
+
 - `program_log_saver`: written by Jean-Luc Rioux, will continually write your program log to disk when enabled.  The feature is disabled by default unless you specify `"log_to_disk": true"` in `config.json` or use the RPC API:
 
     ```JSON

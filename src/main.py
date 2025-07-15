@@ -639,6 +639,18 @@ def program_log_saver_enable_disable(enabled: bool):
         return "200 OK | Program Log will no longer save to disk"
 
 
+def unpair_backend_server():
+    """
+    Call example: {"type": "unpair"}
+
+    The processor will begin to search for a new server.
+
+    Note: make sure before calling this, your server stops responsing to the test endpoint,
+    or else the processor might pair to the same server again.
+    """
+    backend_server_available_setter(False)
+
+
 METHODS_MAP = {
     # All 'methods' take "type", "object", "function" as required arguments
     # and "arg1", "arg2", "arg3" as optional arguments.
@@ -678,6 +690,7 @@ MACROS_MAP = {
     "get_all_elements": get_all_elements_,
     "set_backend_server": set_backend_server_,
     "program_log_saver": program_log_saver_enable_disable,
+    "unpair": unpair_backend_server,
 }
 
 #### User interaction events ####
@@ -705,7 +718,7 @@ def backend_server_available_setter(status):
     if status == True:
         if variables.backend_server_available == False:
             variables.backend_server_available = True
-            change_server_check_loop("start")
+            server_check_loop("start")
             log("Backend Server Available", "info")
             offline_popup = config.get("backend_server_offline_gui_popup", None)
             if offline_popup:
@@ -714,7 +727,7 @@ def backend_server_available_setter(status):
     else:
         if variables.backend_server_available == True:
             variables.backend_server_available = False
-            change_server_check_loop("stop")
+            server_check_loop("stop")
             log("Backend Server Unavailable", "error")
             set_backend_server_loop()
             offline_popup = config.get("backend_server_offline_gui_popup", None)
@@ -723,7 +736,7 @@ def backend_server_available_setter(status):
                     ui_device.HidePopup(offline_popup)
 
 
-def change_server_check_loop(start_or_stop):
+def server_check_loop(start_or_stop):
     if start_or_stop == "start":
         if not variables.server_check_timer:
             variables.server_check_timer = Timer(
@@ -867,6 +880,8 @@ def macro_call_handler(command_type, data_dict=None):
             return (result, None)
         except Exception as e:
             return (None, e)
+    elif command_type == "unpair":
+        return "200 OK", None
     else:
         return (None, "Macro: {} Not Found".format(command_type))
 
