@@ -1019,7 +1019,7 @@ def send_to_backend_server(user_data_req):
     def _send_to_backend_server():
         try:
             with urllib.request.urlopen(
-                user_data_req, timeout=int(config["backend_server_timeout"])
+                user_data_req, timeout=int(config.get("backend_server_timeout", 2))
             ) as response:
                 response_data = response.read().decode()
                 # No commands received, just an acknowledgment
