@@ -210,7 +210,6 @@ class ProgramLogSaver:
                 err_msg = "EXCEPTION:{}:{}:{}".format(
                     __class__.__name__, "__savedummyprogramlog", e
                 )
-            print(err_msg)
             ProgramLog(err_msg, "error")
 
     def __checkprogramlog(timer, count):
@@ -219,7 +218,6 @@ class ProgramLogSaver:
         if log != ProgramLogSaver.__cur_log:
             ProgramLogSaver.__cur_log = log
             ProgramLogSaver.__saveprogramlog()
-            print("ProgramLogSaver: new log saved")
 
     def EnableProgramLogSaver():
         ProgramLogSaver.__save_timer = Timer(60, ProgramLogSaver.__checkprogramlog)
