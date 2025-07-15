@@ -1099,7 +1099,10 @@ def handle_rpc_client_connect(client, state):
 def initialize():
     @Wait(0)
     def _set_ntp_async():
-        set_ntp(config["ntp_primary"], config["ntp_secondary"])
+        set_ntp(
+            config.get("ntp_primary", "pool.ntp.org"),
+            config.get("ntp_secondary", None),
+        )
         log("NTP Complete (success or failure)", "info")
 
     set_backend_server_loop()
