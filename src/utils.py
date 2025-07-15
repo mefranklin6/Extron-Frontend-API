@@ -43,8 +43,6 @@ def set_ntp(ntp_primary, ntp_secondary=None):
                 SetAutomaticTime(ntp_secondary)
                 log("Set NTP to secondary server at {}".format(ntp_secondary), "info")
                 return
-            else:
-                log("NTP servers are unreachable", "error")
     except Exception as e:
         log("Error setting NTP: {}".format(str(e)), "error")
 
