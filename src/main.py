@@ -877,7 +877,7 @@ def macro_call_handler(command_type, data_dict=None):
     }
 
     if command_type not in handlers:
-        return (None, "Macro: {} Not Found".format(command_type))
+        return (None, "400 Bad Request | Macro: {} Not Found".format(command_type))
 
     try:
         return handlers[command_type]()
