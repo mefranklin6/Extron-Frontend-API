@@ -6,7 +6,7 @@ Not affiliated with Extron
 
 ## Use Cases
 
-This project can be used to entirely replace the 'backend' (logic, device handling, external connections) with a control system running Extron Control Script (ECS).  This project only uses the standard libraries that come with 'Pro' (non-xi) control processors so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  (basic proof-of-concept project here <https://github.com/mefranklin6/test-echo>)
+This project can be used to entirely replace the 'backend' (logic, device handling, external connections) with a control system running Extron ControlScript (ECS, previously commonly called 'Global Scripter'). This project only uses the standard libraries that come with 'Pro' (non-xi) control processors, so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  (basic proof-of-concept project here <https://github.com/mefranklin6/test-echo>)
 
 Physical ports such as relays, serial ports and devices on a processors AVLAN are also supported.
 
@@ -24,11 +24,7 @@ Anything that can run Extron ControlScript®.  You'll need someone who holds the
 
 ## Current State
 
-IMPORTANT: Branch `Beta` is the latest stable release and is essentially feature-complete, as it is ready to start converting the vast majority of projects. If you find something that you need missing, you can submit an issue or send a pull request.
-
-Branch `main` is the current beta development branch and may not be 100% stable at all times.  You can find features to be implemented and a milestone for the 1.0 release in Github Issues.  
-
-I ask if you use this project and find a way to make it better, please consider sending pull requests to make this project better for everyone.
+v1.0.0 full release.  Any known issues or future features will be in Github issues for this project.
 
 ## Use
 
@@ -36,50 +32,60 @@ Deployment is mostly unchanged from the normal process, but please pay attention
 
 1. As normal, place your `.gdl` file in `layout` then setup your room configuration JSON file, but make note of the `Device Alias`'s you assign to processors and UI Devices (touch panels).
 
-2. Write the `config.json` file from this project to the root of your processor.  This file contains the address for your backend server and NTP server configuration.  Note: The system will prioritize the first server in the list.
+2. Write the `config.json` file from this project to the root of your processor.  See the `config.json.example` file.  This file contains the below:
+    - `backend_server_addresses`: List of potential backend servers.  The first server in the list has priority.  Please use FQDN's with port numbers.
+    - `backend_server_timeout`: timeout in seconds for communicating with a backend server.
+    - `check_backend_server_interval`: polling interval in seconds that the processor will check the backend server for availability, once initially connected.  This should be longer than your timeout setting.
+    - `server_search_interval`: when no server is selected, the processor will search for new servers every this interval, in seconds.  This should be longer than your timeout interval.
+    - `backend_server_offline_gui_popup`: Specify a popup or modal that the processor should display when it has no backend server connection.  Ex: A modal that says "Call the hotline if this message displays for more than 5 seconds".
+    - ntp's: FQDN of your NTP server(s).
+    - `rpc_server_port`: the port that the processor will open to listen to commands
+    - `rpc_server_interface`: the NIC that the processor will listen to commands on.  Valid options and "LAN" and "AVLAN" (if the processor has AVLAN support).
+    - `log_to_disk`: boolean value if the processor should save its' program log to disk, or keep it in volatile memory as normal.
 
 3. Instantiate your hardware into the existing lists using Device Aliases from step 1 into the `src/hardware/hardware.py` file.
 Example
 
-```Python
-# src/hardware/hardware.py
-from extronlib.device import ProcessorDevice, UIDevice, eBUSDevice
+    ```Python
+    # src/hardware/hardware.py
+    from extronlib.device import ProcessorDevice, UIDevice, eBUSDevice
 
-all_ui_devices = [
-    UIDevice("TouchPanel_1"),
-    UIDevice("TouchPanel_2"),
-]
+    all_ui_devices = [
+        UIDevice("TouchPanel_1"),
+        UIDevice("TouchPanel_2"),
+    ]
 
-all_processors = [
-    ProcessorDevice("Processor_1"),
-]
- ```
+    all_processors = [
+        ProcessorDevice("Processor_1"),
+    ]
+    ```
 
 4. Instantiate your GUI elements into the existing lists in their respective files in the `gui_elements` folder.  Use the names that are assigned to these elements in your GUI Designer file.
 
-Example
+Example:
 
 ```python
-# src/gui_elements/buttons.py
+    
+    # src/gui_elements/buttons.py
 
-from extronlib.ui import Button
-from hardware import all_ui_devices
+    from extronlib.ui import Button
+    from hardware import all_ui_devices
 
-tlp1 = all_ui_devices[0]
-tlp2 = all_ui_devices[1]
+    tlp1 = all_ui_devices[0]
+    tlp2 = all_ui_devices[1]
 
-all_buttons = [
-    Button(tlp1, "Btn_Con_Projector"),
-    Button(tlp1, "Btn_Proj_Power"),
-    Button(tlp2, "Btn_Diagnostic"),
-]
+    all_buttons = [
+        Button(tlp1, "Btn_Con_Projector"),
+        Button(tlp1, "Btn_Proj_Power"),
+        Button(tlp2, "Btn_Diagnostic"),
+    ]
 ```
 
-> **Note:** If you are converting an existing project, you can use the included `gui_element_instantiation_converter.py` script to automatically populate the above lists from your old files.
+> **Note:** If you are converting an existing project, you can use the included   `gui_element_instantiation_converter.py` script to automatically populate the above lists from  your old files.
 
 5. If you need to use any relay, serial, or AVLAN devices, run `port_instantiation_helper.py` on a PC.  This provides you with a graphical interface and an easy way to add devices and export the resulting JSON file.
 
-![port_instantiation_helper](https://github.com/user-attachments/assets/95d95af2-ee8a-464a-865d-f18902125bee)
+    ![port_instantiation_helper](https://github.com/user-attachments/assets/95d95af2-ee8a-464a-865d-f18902125bee)
 
 6. Deploy as normal using CSDU.  Re-deploy if you update your GUI Designer File or if you change hardware.
 
@@ -330,7 +336,7 @@ A: Server failover is fully implemented as long as there is an available server.
 
 Q: Will Extron support this?
 
-A: Probably not.  Please do not contact their support for help, I'm hoping this system will reduce support calls for them.  When it comes to building a backend server, absolute freedom comes with the responsibility for fixing things yourself.
+A: Extron employees have expressed a willingness to help this project as a whole, but please do not contact their support for help with your project. I'm hoping this system will reduce support calls for them.  When it comes to building a backend server, absolute freedom comes with the responsibility for fixing things yourself.  For any issues with the base project, please make a post in Github issues.
 
 Q: Will you post an example of a backend server?
 
@@ -338,7 +344,7 @@ A: Yes, see the link at the top of this readme.
 
 Q: What about device drivers and modules?
 
-A: The backend server I’m writing intends to use Go Microservices from <https://github.com/Dartmouth-OpenAV> for device handling.  If your equipment is not yet supported, please consider writing a microservice and contributing it to the group.
+A: The backend server I’m writing intends to use Go Microservices from <https://github.com/Dartmouth-OpenAV> for device handling.  If your equipment is not yet supported, please consider writing a microservice and contributing it to the group.  You are free to use whatever you want.
 
 Q: What about devices on AVLAN or devices that the backend server can't reach?
 
