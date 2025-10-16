@@ -6,11 +6,13 @@ Not affiliated with Extron
 
 ## Use Cases
 
-This project can be used to entirely replace the 'backend' (logic, device handling, external connections) with a control system running Extron ControlScript (ECS, previously commonly called 'Global Scripter'). This project only uses the standard libraries that come with 'Pro' (non-xi) control processors, so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  (basic proof-of-concept project here <https://github.com/mefranklin6/test-echo>)
+This project can be used to entirely offload the 'backend' (logic, device handling, external connections) of a control system running Extron ControlScript*  unto an external server.  The project provides an API that exposes all 'frontend' actions, such as GUI navigation, page changes, popups, sounds, visual states, and other UX items.  The API also allows external control of control processor physical ports such as Serial and Relay ports, in addition to AVLAN passthrough.
 
-Physical ports such as relays, serial ports and devices on a processors AVLAN are also supported.
+ This project only uses the standard libraries that come with 'Pro' (non-xi) control processors, so it is backwards compatible with anything that can run ECS, including old IPCP and IPL Pro processors.  (basic proof-of-concept project here <https://github.com/mefranklin6/test-echo>)
 
-Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` to test and demo GUI's, set relays, and test communications with devices connected over serial or on the processors AVLAN.
+Additionally, this project gives CLI-like control over the processor and connected devices.  You can use `curl` to test and demo GUI's, set relays, and debug communications with devices connected over serial or on the processors AVLAN.
+
+<sup>*Extron Control Script (ECS), formerly commonly known as "GlobalScripter".</sup>
 
 ## Reason
 
