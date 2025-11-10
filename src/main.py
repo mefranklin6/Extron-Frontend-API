@@ -43,7 +43,10 @@ def load_json(path):
 
 config = load_json("config.json")
 if not config:
-    log("Config file not found", "error")
+    log("Config file not found!", "error")
+    log("Using Default for ALL config settings", "warning")
+    log("See default config settings in 'config.json.exmaple'", "info")
+    log("Without a config file, the backend servers must be manually set", "warning")
     raise FileNotFoundError("Config file not found")
 
 log_to_disk = config.get("log_to_disk", False)
@@ -1047,9 +1050,9 @@ def send_user_interaction(gui_element_data):
 #### RPC Server (Listening) ####
 
 rpc_serv = EthernetServerInterfaceEx(
-    IPPort=int(config["rpc_server_port"]),
+    IPPort=int(config.get("rpc_server_port", 8080)),
     Protocol="TCP",
-    Interface=config["rpc_server_interface"],
+    Interface=config.get("rpc_server_interface", "LAN"),
 )
 
 if rpc_serv.StartListen() != "Listening":
