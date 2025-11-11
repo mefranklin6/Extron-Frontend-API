@@ -656,9 +656,13 @@ def unpair_backend_server():
     Note: make sure before calling this, your server stops responsing to the test endpoint,
     or else the processor might pair to the same server again.
     """
-    log("Backend Server called 'unpair', searching for new server", "warning")
-    backend_server_available_setter(False)
-    return "200 OK", None
+    if variables.backend_server_available == True:
+        log("Backend Server called 'unpair', searching for new server", "warning")
+        backend_server_available_setter(False)
+        return "200 OK", None
+    else:
+        log("Unpair called but processor was not attached to any server", "warning")
+        return "409 Conflict | No server to unpair from"
 
 
 METHODS_MAP = {
