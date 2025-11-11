@@ -47,7 +47,8 @@ if not config:
     log("Using Default for ALL config settings", "warning")
     log("See default config settings in 'config.json.exmaple'", "info")
     log("Without a config file, the backend servers must be manually set", "warning")
-    raise FileNotFoundError("Config file not found")
+    config = {}
+
 
 log_to_disk = config.get("log_to_disk", False)
 if log_to_disk:
@@ -1056,6 +1057,7 @@ rpc_serv = EthernetServerInterfaceEx(
 )
 
 if rpc_serv.StartListen() != "Listening":
+    log("FATAL: RPC Server can not start because the port is unavailable")
     raise ResourceWarning("Port unavailable")  # this will not recover
 
 
@@ -1102,7 +1104,13 @@ def initialize():
         )
         log("NTP Complete (success or failure)", "info")
 
-    set_backend_server_loop()
+    if config and config.get("backend_server_addresses"):
+        set_backend_server_loop()
+    else:
+        log(
+            "No backend servers specified. They must be manually set through RPC calls",
+            "warning",
+        )
 
 
 initialize()
