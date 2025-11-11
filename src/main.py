@@ -1114,3 +1114,4 @@ def initialize():
 
 
 initialize()
+log("System initialized", "info")
