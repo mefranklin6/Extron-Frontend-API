@@ -44,9 +44,11 @@ def load_json(path):
 config = load_json("config.json")
 if not config:
     log("Config file not found!", "error")
-    log("Using Default for ALL config settings", "warning")
+    log("Using Default for ALL config settings (except backend servers)", "warning")
     log("See default config settings in 'config.json.exmaple'", "info")
-    log("Without a config file, the backend servers must be manually set", "warning")
+    log(
+        "Without a config file, the backend servers must now be manually set", "warning"
+    )
     config = {}
 
 
@@ -1108,7 +1110,7 @@ def initialize():
         set_backend_server_loop()
     else:
         log(
-            "No backend servers specified. They must be manually set through RPC calls",
+            "No backend servers specified. They must now be manually set through RPC calls",
             "warning",
         )
 
